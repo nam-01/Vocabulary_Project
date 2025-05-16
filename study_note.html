@@ -210,9 +210,10 @@ onAuthStateChanged(auth, async (user) => {
 
   querySnapshot.forEach(docSnap => {
     const item = docSnap.data();
-    console.log("[Firestore 문서]", item);
     if (!item.word || !item.searchedAt) return;
-    const date = item.searchedAt.slice(0, 10);
+    const utcDate = new Date(item.searchedAt);
+    const kstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+    const date = kstDate.toISOString().slice(0, 10);
     if (!wordMap.has(date)) wordMap.set(date, []);
     wordMap.get(date).push({
       word: item.word,
@@ -224,8 +225,6 @@ onAuthStateChanged(auth, async (user) => {
   data = Array.from(wordMap.entries())
     .map(([date, words]) => ({ date, words }))
     .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  console.log("[변환된 단어장 구조]", data);
 
   populateMonthFilter();
   renderWordbooks(data);
@@ -254,7 +253,6 @@ function populateMonthFilter() {
 }
 
 function renderWordbooks(filteredData = data) {
-  console.log("[렌더링할 데이터]", filteredData);
   container.innerHTML = '';
   const sorted = [...filteredData];
   const sortBy = sortSelect.value;
