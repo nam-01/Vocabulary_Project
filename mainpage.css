@@ -156,4 +156,47 @@
   .user-menu:hover .user-dropdown {
     display: block;
   }
-  
+
+  /* 어휘 학습(단어장 관리)용 메뉴뉴 */
+.filter-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+select {
+  padding: 8px;
+  font-size: 14px;
+}
+.wordbook-card {
+  border: 2px solid #ccc;
+  border-radius: 15px;
+  padding: 15px 20px;
+  margin: 10px auto;
+  max-width: 600px;
+  background-color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+.word-list {
+  margin: 0 auto 20px auto;
+  max-width: 600px;
+  background-color: #f8f8f8;
+  padding: 10px;
+  border-left: 3px solid #ccc;
+  text-align: left;
+}
+.word-item {
+  margin-bottom: 8px;
+}
+.word-item strong {
+  display: inline-block;
+  width: 80px;
+}
+.tool-dropdown {
+  font-size: 14px;
+  padding: 5px;
+}
