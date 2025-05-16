@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>검색 결과</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: #e0e0e0;
+    }
+
+    nav {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      background-color: #fff;
+      display: flex;
+      justify-content: center;
+    }
+    nav a {
+      margin-right: 10px;
+      cursor: pointer;
+      text-decoration: underline;
+      color: black;
+    }
+    nav a:nth-child(2),
+    nav a:nth-child(3),
+    .user-menu {
+      margin-left: 15px;
+    }
+
+    .user-menu {
+      position: relative;
+      display: inline-block;
+    }
+    .user-dropdown {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+      top: 25px;
+      right: 0;
+      border-radius: 6px;
+    }
+    .user-dropdown a {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+    }
+    .user-dropdown a:hover {
+      background-color: #ddd;
+    }
+    .user-menu:hover .user-dropdown {
+      display: block;
+    }
+
+    section {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      text-align: center;
+    }
+    section.active {
+      display: block;
+    }
+
+    .center-box {
+      height: calc(100vh - 60px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <!-- 네비게이션 -->
+  <nav>
+    <a onclick="location.href='mainpage.html'">홈</a>
+    <a onclick="location.href='study_note.html'">어휘 학습</a>
+    <a onclick="location.href='study_tools.html'">학습 도구</a>
+    <div id="authContainer"></div>
+  </nav>
+
+  <!-- 중앙 텍스트 -->
+  <div class="center-box">
+    학습 도구 페이지
+  </div>
+
+  <!-- Firebase 인증 및 UI 업데이트 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
+      authDomain: "auto-dictionary-29936.firebaseapp.com",
+      projectId: "auto-dictionary-29936",
+      storageBucket: "auto-dictionary-29936.appspot.com",
+      messagingSenderId: "103494421267",
+      appId: "1:103494421267:web:6762683fac5ac130e468e6",
+      measurementId: "G-EKSJXHHRYS"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    const authContainer = document.getElementById("authContainer");
+
+    function login() {
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          console.log("로그인 성공:", result.user.displayName);
+        })
+        .catch((error) => {
+          console.error("로그인 실패:", error);
+        });
+    }
+
+    function logout() {
+      signOut(auth)
+        .then(() => {
+          console.log("로그아웃 완료");
+        })
+        .catch((error) => {
+          console.error("로그아웃 실패:", error);
+        });
+    }
+
+    function updateAuthUI(user) {
+      authContainer.innerHTML = "";
+      if (user) {
+        const name = user.displayName.length > 5 ? user.displayName.slice(0, 5) : user.displayName;
+        authContainer.innerHTML = `
+          <div class="user-menu">
+            <a href="javascript:void(0);" style="text-decoration: none">
+              <span class="user-label">${name}</span>
+              <img src="${user.photoURL}" alt="사용자" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle;" />
+            </a>
+            <div class="user-dropdown">
+              <a href="#">사용자 정보</a>
+              <a href="#">통계</a>
+              <a href="#" id="logoutBtn">로그아웃</a>
+            </div>
+          </div>
+        `;
+        document.getElementById("logoutBtn").addEventListener("click", logout);
+      } else {
+        authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
+        document.getElementById("loginBtn").addEventListener("click", login);
+      }
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      updateAuthUI(user);
+    });
+  </script>
+</body>
+</html>

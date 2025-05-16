@@ -39,27 +39,5 @@
   <h1>사용자 맞춤형 단어장</h1>
   <button onclick="location.href='mainpage.html'">시작하기</button>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-analytics.js";
-    import { getAuth } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
-      authDomain: "auto-dictionary-29936.firebaseapp.com",
-      projectId: "auto-dictionary-29936",
-      storageBucket: "auto-dictionary-29936.appspot.com",
-      messagingSenderId: "103494421267",
-      appId: "1:103494421267:web:6762683fac5ac130e468e6",
-      measurementId: "G-EKSJXHHRYS"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-  </script>
-
 </body>
 </html>
