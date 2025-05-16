@@ -71,7 +71,7 @@
     // 탭 이동
     function showSection(id) {
       if (id === 'vocab') {
-        renderWordbooks(data); // vocab 진입 시 단어장 초기 렌더링
+        renderWordbooks(data); 
       }
     
       document.querySelectorAll('section').forEach(sec => {
@@ -80,6 +80,7 @@
       document.getElementById(id).classList.add('active');
     }
     
+  // 단어장 관리 
     const data = [
   {
     date: "2025-02-03",
