@@ -204,7 +204,7 @@ onAuthStateChanged(auth, async (user) => {
   updateAuthUI(user);
   if (!user) return;
 
-  const q = query(collection(db, "users", user.uid, "searchHistory"));
+  const q = query(collection(db, "users", user.email, "searchHistory"));
   const querySnapshot = await getDocs(q);
   const wordMap = new Map();
 

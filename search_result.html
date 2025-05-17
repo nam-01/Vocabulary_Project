@@ -210,7 +210,7 @@
 
       // Firestore 기록 저장 (로그인한 경우만)
       if (user) {
-        const historyRef = doc(db, "users", user.uid, "searchHistory", word);
+        const historyRef = doc(db, "users", user.email, "searchHistory", word);
         const snap = await getDoc(historyRef);
         const now = new Date().toISOString();
         const count = snap.exists() ? (snap.data().count || 1) + 1 : 1;
