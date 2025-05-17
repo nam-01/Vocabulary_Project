@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>학습 도구 웹</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: #e0e0e0;
+    }
+
+    nav {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      background-color: #fff;
+      display: flex;
+      justify-content: center;
+    }
+    nav a {
+      margin-right: 10px;
+      cursor: pointer;
+      text-decoration: underline;
+      color: black;
+    }
+    nav a:nth-child(2),
+    nav a:nth-child(3),
+    .user-menu {
+      margin-left: 15px;
+    }
+
+    section {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      text-align: center;
+    }
+    section.active {
+      display: block;
+    }
+
+    .search-container {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .search-wrapper {
+      position: relative;
+      width: 500px;
+    }
+    .search-box {
+      width: 100%;
+      height: 60px;
+      padding: 0 45px 0 15px;
+      border: 1px solid #ccc;
+      border-radius: 24px;
+      font-size: 16px;
+      outline: none;
+    }
+    .search-box:focus {
+      box-shadow: 0 0 5px rgba(66, 133, 244, 0.6);
+      border-color: #4285f4;
+    }
+    .search-button {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .history-box {
+      width: 200px;
+      max-height: 300px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      overflow-y: auto;
+      text-align: left;
+      font-size: 14px;
+    }
+    .history-box div {
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+
+    .hint-box {
+      margin-top: 10px;
+      display: none;
+      justify-content: center;
+      padding: 10px;
+      flex-wrap: wrap;
+    }
+
+    .suggestion-row {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 500px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .suggestion-item {
+      background-color: transparent;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: #333;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+    }
+    .suggestion-item:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    .delete-btn {
+      border: none;
+      background: none;
+      font-size: 18px;
+      color: #888;
+      cursor: pointer;
+      padding: 0;
+    }
+    .delete-btn:hover {
+      color: red;
+    }
+
+    .search-result {
+      font-size: 24px;
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .user-menu {
+      position: relative;
+      display: inline-block;
+    }
+    .user-dropdown {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+      top: 25px;
+      right: 0;
+      border-radius: 6px;
+    }
+    .user-dropdown a {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+    }
+    .user-dropdown a:hover {
+      background-color: #ddd;
+    }
+    .user-menu:hover .user-dropdown {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<!-- 기존 HTML 본문 유지 -->
+<nav>
+  <a onclick="location.href='mainpage.html'">홈</a>
+  <a onclick="location.href='study_note.html'">어휘 학습</a>
+  <a onclick="location.href='study_tools.html'">학습 도구</a>
+  <div id="authContainer"></div>
+</nav>
+
+<section id="home" class="active">
+  <div class="search-container">
+    <div class="search-wrapper">
+      <input type="text" id="searchInput" class="search-box" placeholder="검색어를 입력하세요" autocomplete="off">
+      <button class="search-button" onclick="search()">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+    
+  </div>
+  <div id="hintBox" class="hint-box">
+    <div id="suggestionRow" class="suggestion-row"></div>
+  </div>
+  <div id="searchResult" class="search-result"></div>
+</section>
+
+<section id="vocab">
+  <h1>어휘 학습 페이지</h1>
+  <p>이 페이지는 어휘 학습을 도와주는 페이지입니다.</p>
+</section>
+
+<section id="tools">
+  <h1>학습 도구 페이지</h1>
+  <p>이 페이지는 학습 도구들을 제공하는 페이지입니다.</p>
+</section>
+
+<section id="user">
+  <h1>사용자</h1>
+</section>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+  import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    signOut,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
+    authDomain: "auto-dictionary-29936.firebaseapp.com",
+    projectId: "auto-dictionary-29936",
+    storageBucket: "auto-dictionary-29936.appspot.com",
+    messagingSenderId: "103494421267",
+    appId: "1:103494421267:web:6762683fac5ac130e468e6",
+    measurementId: "G-EKSJXHHRYS"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+  const authContainer = document.getElementById("authContainer");
+
+  function login() {
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        console.log("로그인 성공:", result.user.displayName);
+      })
+      .catch((error) => {
+        console.error("로그인 실패:", error);
+      });
+  }
+
+  function logout() {
+    signOut(auth)
+      .then(() => {
+        console.log("로그아웃 완료");
+      })
+      .catch((error) => {
+        console.error("로그아웃 실패:", error);
+      });
+  }
+
+  function updateAuthUI(user) {
+    authContainer.innerHTML = "";
+    if (user) {
+      const name = user.displayName.length > 5 ? user.displayName.slice(0, 5) : user.displayName;
+      authContainer.innerHTML = `
+        <div class="user-menu">
+          <a href="javascript:void(0);" style="text-decoration: none">
+            <span class="user-label">${name}</span>
+            <img src="${user.photoURL}" alt="사용자" class="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; vertical-align: middle;" />
+          </a>
+          <div class="user-dropdown">
+            <a href="#">사용자 정보</a>
+            <a href="#">통계</a>
+            <a href="#" id="logoutBtn">로그아웃</a>
+          </div>
+        </div>
+      `;
+      document.getElementById("logoutBtn").addEventListener("click", logout);
+    } else {
+      authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
+      document.getElementById("loginBtn").addEventListener("click", login);
+    }
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    updateAuthUI(user);
+  });
+</script>
+
+<script>
+  function showSection(id) {
+    document.querySelectorAll('section').forEach(sec => {
+      sec.classList.remove('active');
+    });
+    document.getElementById(id).classList.add('active');
+  }
+
+  const input = document.getElementById("searchInput");
+  const hintBox = document.getElementById("hintBox");
+  const suggestionRow = document.getElementById("suggestionRow");
+  const searchResult = document.getElementById("searchResult");
+  const historyBox = document.getElementById("searchHistory");
+
+  let suggestions = JSON.parse(localStorage.getItem("guestHistory") || "[]");
+
+  function renderSuggestions() {
+    suggestionRow.innerHTML = '';
+    suggestions.forEach(word => {
+      const item = document.createElement('div');
+      item.className = 'suggestion-item';
+      item.innerHTML = `
+        <span onclick="goToResult('${word}')">${word}</span>
+        <button class="delete-btn" onclick="deleteSuggestion('${word}')">×</button>
+      `;
+      suggestionRow.appendChild(item);
+    });
+  }
+
+  function deleteSuggestion(word) {
+    suggestions = suggestions.filter(item => item !== word);
+    localStorage.setItem("guestHistory", JSON.stringify(suggestions));
+    renderSuggestions();
+  }
+
+  function updateHistory(query) {
+    suggestions = suggestions.filter(item => item !== query);
+    suggestions.unshift(query);
+    if (suggestions.length > 20) suggestions.pop();
+    localStorage.setItem("guestHistory", JSON.stringify(suggestions));
+    renderSuggestions();
+  }
+
+  function renderHistory() {
+    const history = JSON.parse(localStorage.getItem("guestHistory") || "[]");
+    historyBox.innerHTML = history.map(item => `<div>${item}</div>`).join("");
+  }
+
+  input.addEventListener("input", function () {
+    renderSuggestions();
+});
+hintBox.style.display = "flex";
+
+  input.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+      search();
+    }
+  });
+
+  function search() {
+    const query = input.value.trim();
+    if (query) {
+      updateHistory(query);
+      goToResult(query);
+    }
+  }
+
+  function goToResult(query) {
+    location.href = `search_result.html?word=${encodeURIComponent(query)}`;
+  }
+
+  // 최초 로딩 시 검색기록 표시
+  renderSuggestions();
+</script>
