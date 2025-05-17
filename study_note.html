@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>어휘 학습</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: #e0e0e0;
+    }
+    nav {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      background-color: #fff;
+      display: flex;
+      justify-content: center;
+    }
+    nav a {
+      margin-right: 10px;
+      cursor: pointer;
+      text-decoration: underline;
+      color: black;
+    }
+    nav a:nth-child(2), nav a:nth-child(3), .user-menu {
+      margin-left: 15px;
+    }
+    .user-menu {
+      position: relative;
+      display: inline-block;
+    }
+    .user-dropdown {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+      top: 25px;
+      right: 0;
+      border-radius: 6px;
+    }
+    .user-dropdown a {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+    }
+    .user-dropdown a:hover {
+      background-color: #ddd;
+    }
+    .user-menu:hover .user-dropdown {
+      display: block;
+    }
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    select {
+      padding: 8px;
+      font-size: 14px;
+    }
+    .wordbook-card {
+      border: 2px solid #ccc;
+      border-radius: 15px;
+      padding: 15px 20px;
+      margin: 10px auto;
+      max-width: 600px;
+      background-color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .word-list {
+      margin: 0 auto 20px auto;
+      max-width: 600px;
+      background-color: #f8f8f8;
+      padding: 10px;
+      border-left: 3px solid #ccc;
+      text-align: left;
+    }
+    .word-item {
+      margin-bottom: 8px;
+    }
+    .word-item strong {
+      display: inline-block;
+      width: 80px;
+    }
+    .tool-dropdown {
+      font-size: 14px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 네비게이션 -->
+  <nav>
+    <a onclick="location.href='mainpage.html'">홈</a>
+    <a onclick="location.href='study_note.html'">어휘 학습</a>
+    <a onclick="location.href='study_tools.html'">학습 도구</a>
+    <div id="authContainer"></div>
+  </nav>
+
+  <!-- 어휘 학습 콘텐츠 -->
+  <section id="vocab" class="active" style="text-align: center;">
+    <h1 style="text-align: center;">어휘 학습 페이지</h1>
+    <div class="filter-bar">
+      <label for="month-filter">월별 필터:</label>
+      <select id="month-filter">
+        <option value="all">전체 보기</option>
+      </select>
+      <label for="sort-select">정렬:</label>
+      <select id="sort-select">
+        <option value="date">날짜순</option>
+        <option value="count">단어수순</option>
+      </select>
+    </div>
+    <div id="wordbook-container"></div>
+  </section>
+
+  <!-- Firebase 인증 스크립트 -->
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+import {
+  getFirestore, collection, getDocs, query
+} from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
+  authDomain: "auto-dictionary-29936.firebaseapp.com",
+  projectId: "auto-dictionary-29936",
+  storageBucket: "auto-dictionary-29936.appspot.com",
+  messagingSenderId: "103494421267",
+  appId: "1:103494421267:web:6762683fac5ac130e468e6",
+  measurementId: "G-EKSJXHHRYS"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore();
+const provider = new GoogleAuthProvider();
+const authContainer = document.getElementById("authContainer");
+
+function login() {
+  signInWithPopup(auth, provider).then((result) => {
+    console.log("로그인 성공:", result.user.displayName);
+  }).catch((error) => {
+    console.error("로그인 실패:", error);
+  });
+}
+
+function logout() {
+  signOut(auth).then(() => {
+    console.log("로그아웃 완료");
+  }).catch((error) => {
+    console.error("로그아웃 실패:", error);
+  });
+}
+
+function updateAuthUI(user) {
+  authContainer.innerHTML = "";
+  if (user) {
+    const name = user.displayName.length > 5 ? user.displayName.slice(0, 5) : user.displayName;
+    authContainer.innerHTML = `
+      <div class="user-menu">
+        <a href="javascript:void(0);" style="text-decoration: none">
+          <span class="user-label">${name}</span>
+          <img src="${user.photoURL}" alt="사용자" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle;" />
+        </a>
+        <div class="user-dropdown">
+          <a href="#">사용자 정보</a>
+          <a href="#">통계</a>
+          <a href="#" id="logoutBtn">로그아웃</a>
+        </div>
+      </div>
+    `;
+    document.getElementById("logoutBtn").addEventListener("click", logout);
+  } else {
+    authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
+    document.getElementById("loginBtn").addEventListener("click", login);
+  }
+}
+
+const container = document.getElementById("wordbook-container");
+const filter = document.getElementById("month-filter");
+const sortSelect = document.getElementById("sort-select");
+let data = [];
+
+onAuthStateChanged(auth, async (user) => {
+  updateAuthUI(user);
+  if (!user) return;
+
+  const q = query(collection(db, "users", user.email, "searchHistory"));
+  const querySnapshot = await getDocs(q);
+  const wordMap = new Map();
+
+  querySnapshot.forEach(docSnap => {
+    const item = docSnap.data();
+    if (!item.word || !item.searchedAt) return;
+    const utcDate = new Date(item.searchedAt);
+    const kstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+    const date = kstDate.toISOString().slice(0, 10);
+    if (!wordMap.has(date)) wordMap.set(date, []);
+    wordMap.get(date).push({
+      word: item.word,
+      meaning: Array.isArray(item.meaning) ? item.meaning[0] || "" : "",
+      synonyms: Array.isArray(item.synonyms) ? item.synonyms : []
+    });
+  });
+
+  data = Array.from(wordMap.entries())
+    .map(([date, words]) => ({ date, words }))
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  populateMonthFilter();
+  renderWordbooks(data);
+
+  filter.addEventListener("change", () => {
+    const selected = filter.value;
+    const filtered = selected === "all" ? data : data.filter(d => d.date.startsWith(selected));
+    renderWordbooks(filtered);
+  });
+
+  sortSelect.addEventListener("change", () => {
+    const selected = filter.value;
+    const filtered = selected === "all" ? data : data.filter(d => d.date.startsWith(selected));
+    renderWordbooks(filtered);
+  });
+});
+
+function populateMonthFilter() {
+  const months = Array.from(new Set(data.map(d => d.date.slice(0, 7)))).sort().reverse();
+  months.forEach(month => {
+    const opt = document.createElement("option");
+    opt.value = month;
+    opt.textContent = `${month}월`;
+    filter.appendChild(opt);
+  });
+}
+
+function renderWordbooks(filteredData = data) {
+  container.innerHTML = '';
+  const sorted = [...filteredData];
+  const sortBy = sortSelect.value;
+  if (sortBy === "date") sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
+  else if (sortBy === "count") sorted.sort((a, b) => b.words.length - a.words.length);
+
+  sorted.forEach(entry => {
+    const card = document.createElement("div");
+    card.className = "wordbook-card";
+
+    const left = document.createElement("div");
+    left.textContent = `${entry.date} - ${entry.words.length}단어`;
+
+    const toolSelect = document.createElement("select");
+    toolSelect.className = "tool-dropdown";
+    toolSelect.innerHTML = `
+      <option selected disabled>학습도구 ▼</option>
+      <option>플래시카드</option>
+      <option>퀴즈</option>
+      <option>복습</option>
+    `;
+
+    card.appendChild(left);
+    card.appendChild(toolSelect);
+    card.addEventListener("click", (e) => {
+      if (e.target.tagName.toLowerCase() === "select") return;
+      toggleWordDetail(entry, card);
+    });
+
+    container.appendChild(card);
+  });
+}
+
+function toggleWordDetail(entry, cardElement) {
+  const existing = cardElement.nextSibling;
+  if (existing && existing.classList.contains("word-list")) {
+    existing.remove();
+    return;
+  }
+
+  const list = document.createElement("div");
+  list.className = "word-list";
+
+  entry.words.forEach(word => {
+    const item = document.createElement("div");
+    item.className = "word-item";
+    item.innerHTML = `<strong>${word.word}</strong> 의미: ${word.meaning}<br><strong>유의어:</strong> ${word.synonyms.join(', ')}`;
+    list.appendChild(item);
+  });
+
+  cardElement.after(list);
+}
+</script>
+</body>
+</html>
