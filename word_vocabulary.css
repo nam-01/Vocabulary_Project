@@ -16,12 +16,14 @@ nav {
   display: flex;
   justify-content: center; /* 중앙 정렬 */
 }
+
 nav a {
   margin-right: 10px;
   cursor: pointer;
   text-decoration: underline;
   color: black;
 }
+
 /* 중앙에서 살짝 오른쪽으로 이동 */
 nav a:nth-child(2),
 nav a:nth-child(3),
