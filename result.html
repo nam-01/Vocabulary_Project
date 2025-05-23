@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>검색 결과</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: #FFFFFF;
+    }
+
+    nav {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      background-color: #d4e6d2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    nav a {
+      margin: 0 10px;
+      cursor: pointer;
+      text-decoration: underline;
+      color: black;
+      font-weight: 500;
+    }
+
+    #authContainer {
+      margin-left: auto;
+      margin-right: 20px;
+    }
+
+    .user-menu {
+      position: relative;
+      display: inline-block;
+    }
+
+    .user-label {
+      margin-right: 5px;
+      font-weight: bold;
+    }
+
+    .user-dropdown {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      min-width: 120px;
+      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+    }
+
+    .user-menu:hover .user-dropdown {
+      display: block;
+    }
+
+    .user-dropdown a {
+      display: block;
+      padding: 10px;
+      text-decoration: none;
+      color: black;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .user-dropdown a:hover {
+      background-color: #f0f0f0;
+    }
+
+    .search-box {
+      margin: 30px auto 10px;
+      width: 500px;
+      display: flex;
+      align-items: center;
+      border: 2px solid #4e8c4b;
+      border-radius: 25px;
+      padding: 5px 15px;
+    }
+
+    .search-box input {
+      border: none;
+      outline: none;
+      flex: 1;
+      font-size: 18px;
+      padding: 10px;
+      font-family: "Iowan Old Style", serif;
+    }
+
+    .search-box i {
+      font-size: 20px;
+      color: #4e8c4b;
+    }
+
+    .result-box {
+      max-width: 600px;
+      margin: 30px auto;
+      text-align: center;
+    }
+
+    .searched-word {
+      font-size: 30px;
+      font-family: "Iowan Old Style", serif;
+      font-weight: 400;
+      text-decoration: underline;
+      margin-bottom: 40px;
+    }
+
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 15px 0;
+    }
+
+    .label {
+      font-size: 20px;
+      font-family: Inter, sans-serif;
+      font-weight: 500;
+      margin-right: 10px;
+      width: 60px;
+      text-align: right;
+    }
+
+    .divider {
+      width: 2px;
+      height: 30px;
+      background-color: black;
+      margin: 0 10px;
+    }
+
+    .value {
+      font-size: 20px;
+      font-family: Inter, sans-serif;
+      text-align: left;
+      max-width: 300px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 네비게이션 -->
+  <nav>
+    <a onclick="location.href='mainpage.html'">홈</a>
+    <a onclick="location.href='study_note.html'">어휘 학습</a>
+    <a onclick="location.href='study_tools.html'">학습 도구</a>
+    <div id="authContainer"></div>
+  </nav>
+
+  <!-- 검색창 -->
+  <div class="search-box">
+    <input type="text" placeholder="검색 단어">
+    <i class="fas fa-search"></i>
+  </div>
+
+  <!-- 결과 표시 -->
+  <div class="result-box">
+    <div class="searched-word">검색 단어</div>
+
+    <div class="result-row">
+      <div class="label">뜻</div>
+      <div class="divider"></div>
+      <div class="value">뜻 내용이 여기에 들어갑니다.</div>
+    </div>
+
+    <div class="result-row">
+      <div class="label">유의어</div>
+      <div class="divider"></div>
+      <div class="value">유의어1, 유의어2</div>
+    </div>
+
+    <div class="result-row">
+      <div class="label">반의어</div>
+      <div class="divider"></div>
+      <div class="value">반의어1, 반의어2</div>
+    </div>
+
+    <div class="result-row">
+      <div class="label">예문</div>
+      <div class="divider"></div>
+      <div class="value">예문이 여기에 들어갑니다.</div>
+    </div>
+  </div>
+
+  <!-- Firebase 인증 스크립트 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
+      authDomain: "auto-dictionary-29936.firebaseapp.com",
+      projectId: "auto-dictionary-29936",
+      storageBucket: "auto-dictionary-29936.appspot.com",
+      messagingSenderId: "103494421267",
+      appId: "1:103494421267:web:6762683fac5ac130e468e6",
+      measurementId: "G-EKSJXHHRYS"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    const authContainer = document.getElementById("authContainer");
+
+    function login() {
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          console.log("로그인 성공:", result.user.displayName);
+        })
+        .catch((error) => {
+          console.error("로그인 실패:", error);
+        });
+    }
+
+    function logout() {
+      signOut(auth)
+        .then(() => {
+          console.log("로그아웃 완료");
+        })
+        .catch((error) => {
+          console.error("로그아웃 실패:", error);
+        });
+    }
+
+    function updateAuthUI(user) {
+      authContainer.innerHTML = "";
+      if (user) {
+        const name = user.displayName.length > 5 ? user.displayName.slice(0, 5) : user.displayName;
+        authContainer.innerHTML = `
+          <div class="user-menu">
+            <a href="javascript:void(0);" style="text-decoration: none">
+              <span class="user-label">${name}</span>
+              <img src="${user.photoURL}" alt="사용자" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle;" />
+            </a>
+            <div class="user-dropdown">
+              <a href="#">사용자 정보</a>
+              <a href="#">통계</a>
+              <a href="#" id="logoutBtn">로그아웃</a>
+            </div>
+          </div>
+        `;
+        document.getElementById("logoutBtn").addEventListener("click", logout);
+      } else {
+        authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
+        document.getElementById("loginBtn").addEventListener("click", login);
+      }
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      updateAuthUI(user);
+    });
+  </script>
+</body>
+</html>
+
