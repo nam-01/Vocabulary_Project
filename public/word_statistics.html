@@ -223,7 +223,7 @@
             </a>
             <div class="user-dropdown">
               <a href="#">사용자 정보</a>
-              <a href="#" onclick="document.getElementById('statisticsSection').scrollIntoView({behavior: 'smooth'})">통계</a>
+              <a href="#" onclick="event.preventDefault(); document.getElementById('statisticsSection').scrollIntoView({behavior: 'smooth'})">통계</a>
               <a href="#" id="logoutBtn">로그아웃</a>
             </div>
           </div>
@@ -239,7 +239,7 @@
       updateAuthUI(user);
     });
   
-  <!--임의 단어 -->
+  //임의 단어 
   const data = [
     { date:"2025-05-20",
       words:[
@@ -280,6 +280,7 @@
   }
 
   function showWords(period,event){
+    document.getElementById("statisticsSection").style.display = "block";
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     if(event && event.target) event.target.classList.add('active');
 
