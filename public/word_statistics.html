@@ -245,23 +245,24 @@
     });
   
   //임의 단어 
-  const data = [
-    { date:"2025-05-20",
-      words:[
-        {word:"happy", meaning:"행복한", synonyms:["joyful","cheerful"]},
-        {word:"fast",  meaning:"빠른",   synonyms:["quick","speedy"]}
-      ]},
-    { date:"2025-04-01",
-      words:[
-        {word:"cold",  meaning:"추운",   synonyms:["chilly","freezing"]},
-        {word:"happy", meaning:"행복한", synonyms:["joyful","cheerful"]}
-      ]},
-    { date:"2025-01-10",
-      words:[
-        {word:"sad",    meaning:"슬픈", synonyms:["gloomy","unhappy"]},
-        {word:"bright", meaning:"밝은", synonyms:["shiny","radiant"]}
-      ]}
-  ];
+const data = [
+  { date:"2025-05-20", words:[
+      {word:"happy", meaning:"행복한", synonyms:["joyful","cheerful"]},
+      {word:"fast",  meaning:"빠른",   synonyms:["quick","speedy"]}
+  ]},
+  { date:"2025-04-20", words:[
+      {word:"cold",  meaning:"추운",   synonyms:["chilly","freezing"]},
+      {word:"happy", meaning:"행복한", synonyms:["joyful","cheerful"]}
+  ]},
+  { date:"2025-03-15", words:[
+      {word:"clear", meaning:"맑은", synonyms:["pure","clean"]},
+      {word:"dark",  meaning:"어두운", synonyms:["dim","gloomy"]}
+  ]},
+  { date:"2025-01-10", words:[
+      {word:"sad",    meaning:"슬픈", synonyms:["gloomy","unhappy"]},
+      {word:"bright", meaning:"밝은", synonyms:["shiny","radiant"]}
+  ]}
+];
 
   function getPopularWords(period){
     const now=new Date();
