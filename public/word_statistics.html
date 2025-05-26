@@ -132,7 +132,17 @@
       box-shadow: 0 0 2px rgba(0,0,0,0.1);
       text-align: left;
     }
-    
+    .word-row {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     margin-bottom: 4px;
+    }
+
+    .count {
+      font-size: 13px;
+      color: #666;
+    }
     .hidden {
       display: none !important;
     }
@@ -333,7 +343,14 @@ const data = [
   const left = words.slice(0, 4);
   const right = words.slice(4, 8);
 
-  const li = w => `<li><strong>${w.word}</strong> (${w.meaning})<br><small>유의어: ${w.synonyms.join(', ')}</small></li>`;
+  const li = w => `
+    <li>
+     <div class="word-row">
+        <div><strong>${w.word}</strong> (${w.meaning})</div>
+        <div class="count">${w.count}번 검색</div>
+     </div>
+      <small>유의어: ${w.synonyms.join(', ')}</small>
+    </li>`;
   wordListLeft.innerHTML = left.map(li).join('');
   wordListRight.innerHTML = right.map(li).join('');
 }
