@@ -211,6 +211,7 @@
     }
 
     function updateAuthUI(user) {
+      console.log("User:", user);
       authContainer.innerHTML = "";
       if (user) {
         const name = user.displayName.length > 5 ? user.displayName.slice(0, 5) : user.displayName;
