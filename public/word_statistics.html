@@ -286,6 +286,9 @@
   }
 
   function showWords(period,event){
+    const wordListLeft = document.getElementById("wordListLeft");
+    const wordListRight = document.getElementById("wordListRight");
+
     document.getElementById("statisticsSection").style.display = "block";
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     if(event && event.target) event.target.classList.add('active');
