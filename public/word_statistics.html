@@ -131,6 +131,10 @@
       box-shadow: 0 0 2px rgba(0,0,0,0.1);
       text-align: left;
     }
+    
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -142,10 +146,12 @@
     <div id="authContainer"></div>
   </nav>
 
-  <!-- 중앙 텍스트 -->
-  <div class="center-box" style="display: none;">
+  <!-- 중앙 텍스트-->
+<div id="main-view">
+  <div class="center-box">
     학습 도구 페이지
   </div>
+</div>
 
   <!-- 통계 부분 -->
   <section id="statisticsSection">
@@ -299,21 +305,16 @@
     document.getElementById('statisticsSection').scrollIntoView({behavior:'smooth'});
   }
 
-   /* 첫 화면 기본 1주 표시 */
-  document.addEventListener('DOMContentLoaded', () => {
-    showWords('week', { target: document.querySelector('button.tab[data-period="week"]') });
-  });
-  
   function showOnlyStatistics() {
-  // 중앙 박스 숨기기
-  const centerBox = document.querySelector('.center-box');
-  if (centerBox) centerBox.style.display = 'none';
+  
+  const main = document.getElementById('main-view');
+  if (main) main.classList.add('hidden');
 
-  // 통계만 표시
+  // 통계 섹션 보이기
   const stat = document.getElementById('statisticsSection');
   if (stat) stat.style.display = 'block';
 
-  // 단어 탭 기본 표시
+  // 단어 탭 초기 표시
   showWords('week', {
     target: document.querySelector('button.tab[data-period="week"]')
   });
