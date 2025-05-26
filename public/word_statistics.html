@@ -157,10 +157,10 @@
   <h3>가장 많이 검색된 단어</h3>
 
   <div class="tabs">
-    <button class="tab active" data-period="week"  onclick="showWords('week',  event)">1주</button>
-    <button class="tab"        data-period="month" onclick="showWords('month', event)">1개월</button>
-    <button class="tab"        data-period="half"  onclick="showWords('half',  event)">6개월</button>
-    <button class="tab"        data-period="year"  onclick="showWords('year',  event)">1년</button>
+    <button class="tab active" data-period="week"  onclick="showWords.call(this, 'week',  event)">1주</button>
+    <button class="tab"        data-period="month" onclick="showWords.call(this, 'month', event)">1개월</button>
+    <button class="tab"        data-period="half"  onclick="showWords.call(this, 'half',  event)">6개월</button>
+    <button class="tab"        data-period="year"  onclick="showWords.call(this, 'year',  event)">1년</button>
   </div>
 
   <div class="words-grid">
@@ -290,15 +290,15 @@ const data = [
     const wordListRight = document.getElementById("wordListRight");
 
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    if (event && event.currentTarget) event.currentTarget.classList.add('active');
+    this.classList.add('active'); 
 
-    const words=getPopularWords(period);
-    const left=words.slice(0,4);
-    const right=words.slice(4,8);
+    const words = getPopularWords(period);
+    const left = words.slice(0, 4);
+    const right = words.slice(4, 8);
 
-    const li=w=>`<li><strong>${w.word}</strong> (${w.meaning})<br><small>유의어: ${w.synonyms.join(', ')}</small></li>`;
-    wordListLeft.innerHTML = left.map(li).join('');
-    wordListRight.innerHTML = right.map(li).join('');
+    const li = w => `<li><strong>${w.word}</strong> (${w.meaning})<br><small>유의어: ${w.synonyms.join(', ')}</small></li>`;
+    document.getElementById("wordListLeft").innerHTML = left.map(li).join('');
+    document.getElementById("wordListRight").innerHTML = right.map(li).join('');
   }
 
   function scrollAndLoadStatistics(){
