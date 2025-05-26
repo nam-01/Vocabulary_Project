@@ -316,6 +316,7 @@ const data = [
   wordListLeft.innerHTML = left.map(li).join('');
   wordListRight.innerHTML = right.map(li).join('');
 }
+  window.showWords = showWords;
 
   function scrollAndLoadStatistics(){
     const btn=document.querySelector('button.tab[data-period="week"]');
