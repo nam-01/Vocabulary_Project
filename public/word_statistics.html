@@ -321,7 +321,7 @@ const data = [
   return Object.entries(wordCount)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
-    .map(([word]) => ({ word, ...wordInfo[word] }));
+    .map(([word, count]) => ({ word, count, ...wordInfo[word] }));
 }
 
   function showWords(period, event = null) {
