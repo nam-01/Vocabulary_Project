@@ -290,22 +290,29 @@ const data = [
     .map(([word]) => ({ word, ...wordInfo[word] }));
 }
 
-  function showWords(period,event){
-    const wordListLeft = document.getElementById("wordListLeft");
-    const wordListRight = document.getElementById("wordListRight");
+  function showWords(period, event = null) {
+  const wordListLeft = document.getElementById("wordListLeft");
+  const wordListRight = document.getElementById("wordListRight");
 
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    const clicked = event?.target?.closest('button');
-    if (clicked) clicked.classList.add('active'); 
+  // 탭 초기화
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
 
-    const words = getPopularWords(period);
-    const left = words.slice(0, 4);
-    const right = words.slice(4, 8);
-
-    const li = w => `<li><strong>${w.word}</strong> (${w.meaning})<br><small>유의어: ${w.synonyms.join(', ')}</small></li>`;
-    document.getElementById("wordListLeft").innerHTML = left.map(li).join('');
-    document.getElementById("wordListRight").innerHTML = right.map(li).join('');
+  const clicked = event?.target?.closest('button');
+  if (clicked) {
+    clicked.classList.add('active');
+  } else {
+    const fallbackBtn = document.querySelector(`.tab[data-period="${period}"]`);
+    if (fallbackBtn) fallbackBtn.classList.add('active');
   }
+
+  const words = getPopularWords(period);
+  const left = words.slice(0, 4);
+  const right = words.slice(4, 8);
+
+  const li = w => `<li><strong>${w.word}</strong> (${w.meaning})<br><small>유의어: ${w.synonyms.join(', ')}</small></li>`;
+  wordListLeft.innerHTML = left.map(li).join('');
+  wordListRight.innerHTML = right.map(li).join('');
+}
 
   function scrollAndLoadStatistics(){
     const btn=document.querySelector('button.tab[data-period="week"]');
