@@ -97,10 +97,23 @@
       font-size: 14px;
       padding: 5px;
     }
+    .hidden {
+      display: none;
+    }
+    .word-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .word-col, .synonym-col {
+      flex: 1;
+    }
+    .divider {
+      width: 20px;
+    }
   </style>
 </head>
 <body>
-  <!-- 네비게이션 -->
   <nav>
     <a onclick="location.href='mainpage.html'">홈</a>
     <a onclick="location.href='study_note.html'">어휘 학습</a>
@@ -108,7 +121,6 @@
     <div id="authContainer"></div>
   </nav>
 
-  <!-- 어휘 학습 콘텐츠 -->
   <section id="vocab" class="active" style="text-align: center;">
     <h1 style="text-align: center;">어휘 학습 페이지</h1>
     <div class="filter-bar">
@@ -123,189 +135,244 @@
       </select>
     </div>
     <div id="wordbook-container"></div>
+    <div id="detail-view" class="hidden">
+      <h1 id="detail-title"></h1>
+      <div id="word-list" class="word-list"></div>
+      <button id="back-button">← 목록으로 돌아가기</button>
+    </div>
   </section>
 
-  <!-- Firebase 인증 스크립트 -->
   <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
-import {
-  getFirestore, collection, getDocs, query
-} from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+    import {
+      getFirestore, collection, getDocs, query
+    } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
-  authDomain: "auto-dictionary-29936.firebaseapp.com",
-  projectId: "auto-dictionary-29936",
-  storageBucket: "auto-dictionary-29936.appspot.com",
-  messagingSenderId: "103494421267",
-  appId: "1:103494421267:web:6762683fac5ac130e468e6",
-  measurementId: "G-EKSJXHHRYS"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
+      authDomain: "auto-dictionary-29936.firebaseapp.com",
+      projectId: "auto-dictionary-29936",
+      storageBucket: "auto-dictionary-29936.appspot.com",
+      messagingSenderId: "103494421267",
+      appId: "1:103494421267:web:6762683fac5ac130e468e6",
+      measurementId: "G-EKSJXHHRYS"
+    };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const db = getFirestore();
-const provider = new GoogleAuthProvider();
-const authContainer = document.getElementById("authContainer");
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+    const provider = new GoogleAuthProvider();
+    const authContainer = document.getElementById("authContainer");
 
-function login() {
-  signInWithPopup(auth, provider).then((result) => {
-    console.log("로그인 성공:", result.user.displayName);
-  }).catch((error) => {
-    console.error("로그인 실패:", error);
-  });
-}
+    function login() {
+      signInWithPopup(auth, provider).then((result) => {
+        console.log("로그인 성공:", result.user.displayName);
+      }).catch((error) => {
+        console.error("로그인 실패:", error);
+      });
+    }
 
-function logout() {
-  signOut(auth).then(() => {
-    console.log("로그아웃 완료");
-  }).catch((error) => {
-    console.error("로그아웃 실패:", error);
-  });
-}
+    function logout() {
+      signOut(auth).then(() => {
+        console.log("로그아웃 완료");
+      }).catch((error) => {
+        console.error("로그아웃 실패:", error);
+      });
+    }
 
-function updateAuthUI(user) {
-  authContainer.innerHTML = "";
-  if (user) {
-    const name = user.displayName.length > 5 ? user.displayName.slice(0, 5) : user.displayName;
-    authContainer.innerHTML = `
-      <div class="user-menu">
-        <a href="javascript:void(0);" style="text-decoration: none">
-          <span class="user-label">${name}</span>
-          <img src="${user.photoURL}" alt="사용자" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle;" />
-        </a>
-        <div class="user-dropdown">
-          <a href="#">사용자 정보</a>
-          <a href="#">통계</a>
-          <a href="#" id="logoutBtn">로그아웃</a>
-        </div>
-      </div>
-    `;
-    document.getElementById("logoutBtn").addEventListener("click", logout);
-  } else {
-    authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
-    document.getElementById("loginBtn").addEventListener("click", login);
-  }
-}
+    function updateAuthUI(user) {
+      authContainer.innerHTML = "";
+      if (user) {
+        const name = user.displayName.length > 5 ? user.displayName.slice(0, 5) : user.displayName;
+        authContainer.innerHTML = `
+          <div class="user-menu">
+            <a href="javascript:void(0);" style="text-decoration: none">
+              <span class="user-label">${name}</span>
+              <img src="${user.photoURL}" alt="사용자" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle;" />
+            </a>
+            <div class="user-dropdown">
+              <a href="#">사용자 정보</a>
+              <a href="statistics.html">통계</a>
+              <a href="#" id="logoutBtn">로그아웃</a>
+            </div>
+          </div>
+        `;
+        document.getElementById("logoutBtn").addEventListener("click", logout);
+      } else {
+        authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
+        document.getElementById("loginBtn").addEventListener("click", login);
+      }
+    }
 
+    const container = document.getElementById("wordbook-container");
+    const filter = document.getElementById("month-filter");
+    const sortSelect = document.getElementById("sort-select");
+    let data = [];
 
-const container = document.getElementById("wordbook-container");
-const filter = document.getElementById("month-filter");
-const sortSelect = document.getElementById("sort-select");
-let data = [];
+    onAuthStateChanged(auth, async (user) => {
+      updateAuthUI(user);
+      if (!user) return;
 
-onAuthStateChanged(auth, async (user) => {
-  updateAuthUI(user);
-  if (!user) return;
+      const q = query(collection(db, "users", user.email, "searchHistory"));
+      const querySnapshot = await getDocs(q);
+      const wordMap = new Map();
 
-  const q = query(collection(db, "users", user.email, "searchHistory"));
-  const querySnapshot = await getDocs(q);
-  const wordMap = new Map();
+      querySnapshot.forEach(docSnap => {
+        const item = docSnap.data();
+        if (!item.word || !item.searchedAt) return;
+        const utcDate = new Date(item.searchedAt);
+        const kstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+        const date = kstDate.toISOString().slice(0, 10);
+        if (!wordMap.has(date)) wordMap.set(date, []);
+        wordMap.get(date).push({
+          word: item.word,
+          meaning: Array.isArray(item.meaning) ? item.meaning[0] || "" : "",
+          synonyms: Array.isArray(item.synonyms) ? item.synonyms : []
+        });
+      });
 
-  querySnapshot.forEach(docSnap => {
-    const item = docSnap.data();
-    if (!item.word || !item.searchedAt) return;
-    const utcDate = new Date(item.searchedAt);
-    const kstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
-    const date = kstDate.toISOString().slice(0, 10);
-    if (!wordMap.has(date)) wordMap.set(date, []);
-    wordMap.get(date).push({
-      word: item.word,
-      meaning: Array.isArray(item.meaning) ? item.meaning[0] || "" : "",
-      synonyms: Array.isArray(item.synonyms) ? item.synonyms : []
-    });
-  });
+      data = Array.from(wordMap.entries()).map(([date, words]) => ({ date, words }));
 
-  data = Array.from(wordMap.entries())
-    .map(([date, words]) => ({ date, words }))
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+      populateMonthFilter();
+      renderWordbooks(data);
 
-  populateMonthFilter();
-  renderWordbooks(data);
+      filter.addEventListener("change", () => {
+        const selected = filter.value;
+        const filtered = selected === "all" ? data : data.filter(d => d.date.startsWith(selected));
+        renderWordbooks(filtered);
+      });
 
-  filter.addEventListener("change", () => {
-    const selected = filter.value;
-    const filtered = selected === "all" ? data : data.filter(d => d.date.startsWith(selected));
-    renderWordbooks(filtered);
-  });
-
-  sortSelect.addEventListener("change", () => {
-    const selected = filter.value;
-    const filtered = selected === "all" ? data : data.filter(d => d.date.startsWith(selected));
-    renderWordbooks(filtered);
-  });
-});
-
-function populateMonthFilter() {
-  const months = Array.from(new Set(data.map(d => d.date.slice(0, 7)))).sort().reverse();
-  months.forEach(month => {
-    const opt = document.createElement("option");
-    opt.value = month;
-    opt.textContent = `${month}월`;
-    filter.appendChild(opt);
-  });
-}
-
-function renderWordbooks(filteredData = data) {
-  container.innerHTML = '';
-  const sorted = [...filteredData];
-  const sortBy = sortSelect.value;
-  if (sortBy === "date") sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
-  else if (sortBy === "count") sorted.sort((a, b) => b.words.length - a.words.length);
-
-  sorted.forEach(entry => {
-    const card = document.createElement("div");
-    card.className = "wordbook-card";
-
-    const left = document.createElement("div");
-    left.textContent = `${entry.date} - ${entry.words.length}단어`;
-
-    const toolSelect = document.createElement("select");
-    toolSelect.className = "tool-dropdown";
-    toolSelect.innerHTML = `
-      <option selected disabled>학습도구 ▼</option>
-      <option>플래시카드</option>
-      <option>퀴즈</option>
-      <option>복습</option>
-    `;
-
-    card.appendChild(left);
-    card.appendChild(toolSelect);
-    card.addEventListener("click", (e) => {
-      if (e.target.tagName.toLowerCase() === "select") return;
-      toggleWordDetail(entry, card);
+      sortSelect.addEventListener("change", () => {
+        const selected = filter.value;
+        const filtered = selected === "all" ? data : data.filter(d => d.date.startsWith(selected));
+        renderWordbooks(filtered);
+      });
     });
 
-    container.appendChild(card);
-  });
+    function populateMonthFilter() {
+      const months = Array.from(new Set(data.map(d => d.date.slice(0, 7)))).sort().reverse();
+      months.forEach(month => {
+        const opt = document.createElement("option");
+        opt.value = month;
+        opt.textContent = `${month}월`;
+        filter.appendChild(opt);
+      });
+    }
+
+    function renderWordbooks(filteredData = data) {
+      container.innerHTML = '';
+      const sorted = [...filteredData];
+      const sortBy = sortSelect.value;
+      if (sortBy === "date") sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
+      else if (sortBy === "count") sorted.sort((a, b) => b.words.length - a.words.length);
+
+      sorted.forEach(entry => {
+        const card = document.createElement("div");
+        card.className = "wordbook-card";
+
+        const left = document.createElement("div");
+        const dateLink = document.createElement("a");
+        dateLink.href = "#";
+        dateLink.textContent = entry.date;
+        dateLink.style.textDecoration = "underline";
+        dateLink.style.color = "blue";
+        dateLink.style.cursor = "pointer";
+        dateLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          showDetailView(entry);
+        });
+
+        left.appendChild(dateLink);
+        left.appendChild(document.createTextNode(` - ${entry.words.length}단어`));
+
+        
+
+        const toolSelect = document.createElement("select");
+        toolSelect.className = "tool-dropdown";
+        toolSelect.innerHTML = `
+          <option selected disabled>학습도구 ▼</option>
+          <option>플래시카드</option>
+          <option>퀴즈</option>
+          <option>복습</option>
+        `;
+
+        card.appendChild(left);
+        card.appendChild(toolSelect);
+
+        card.addEventListener("click", (e) => {
+          if (e.target.tagName.toLowerCase() === "select" || e.target.tagName.toLowerCase() === "a") return;
+          toggleWordDetail(entry, card);
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    function toggleWordDetail(entry, cardElement) {
+      const existing = cardElement.nextSibling;
+      if (existing && existing.classList.contains("word-list")) {
+        existing.remove();
+        return;
+      }
+
+      const list = document.createElement("div");
+      list.className = "word-list";
+
+      entry.words.forEach(word => {
+        const item = document.createElement("div");
+        item.className = "word-item";
+        item.innerHTML = `<strong>${word.word}</strong> 의미: ${word.meaning}<br><strong>유의어:</strong> ${word.synonyms.join(', ')}`;
+        list.appendChild(item);
+      });
+
+      cardElement.after(list);
+    }
+
+    function showDetailView(entry) {
+      document.getElementById("wordbook-container").classList.add("hidden");
+      document.getElementById("detail-view").classList.remove("hidden");
+      document.querySelector("#vocab h1").classList.add("hidden");
+      document.querySelector(".filter-bar").classList.add("hidden");
+
+      const title = document.getElementById("detail-title");
+      const list = document.getElementById("word-list");
+      title.textContent = `${entry.date} 단어장`;
+      list.innerHTML = "";
+
+      entry.words.forEach(word => {
+        const item = document.createElement("div");
+        item.className = "word-item";
+        item.innerHTML = `
+          <div class="word-row">
+            <div class="word-col">
+              <strong>${word.word}</strong>
+              <div class="meaning">의미: ${word.meaning}</div>
+            </div>
+            <div class="divider"></div>
+            <div class="synonym-col">
+              <strong>유의어:</strong> ${word.synonyms.join(', ')}
+            </div>
+          </div>`;
+        list.appendChild(item);
+      });
+    }
+
+    function goBack() {
+  document.getElementById("detail-view").classList.add("hidden");
+  document.getElementById("wordbook-container").classList.remove("hidden");
+  document.querySelector("#vocab h1").classList.remove("hidden");
+  document.querySelector(".filter-bar").classList.remove("hidden");
 }
 
-function toggleWordDetail(entry, cardElement) {
-  const existing = cardElement.nextSibling;
-  if (existing && existing.classList.contains("word-list")) {
-    existing.remove();
-    return;
-  }
-
-  const list = document.createElement("div");
-  list.className = "word-list";
-
-  entry.words.forEach(word => {
-    const item = document.createElement("div");
-    item.className = "word-item";
-    item.innerHTML = `<strong>${word.word}</strong> 의미: ${word.meaning}<br><strong>유의어:</strong> ${word.synonyms.join(', ')}`;
-    list.appendChild(item);
-  });
-
-  cardElement.after(list);
-}
-</script>
+document.getElementById("back-button").addEventListener("click", goBack);
+  </script>
 </body>
 </html>
+
