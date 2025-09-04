@@ -22,7 +22,6 @@
       display: flex;
       justify-content: center;
     }
-    
     nav a {
       margin-right: 10px;
       cursor: pointer;
@@ -81,59 +80,10 @@
       font-size: 28px;
       color: #444;
     }
-
-    /*통계 부분*/
-    section {
-      margin: 30px auto;
-      padding: 20px;
-      background-color: #d0dbbd;
-      border-radius: 10px;
-      width: 80%;
-      max-width: 800px;
-    }
-
-    .tabs {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-
-    .tab {
-      padding: 5px 10px;
-      border: 1px solid gray;
-      background: #eee;
-      cursor: pointer;
-      margin-right: 5px;
-      border-radius: 4px;
-    }
-
-    .tab.active {
-      background: white;
-      border: 2px solid gray;
-    }
-
-    .words-grid {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .words-grid ul {
-      list-style-type: none;
-      padding: 0;
-      width: 48%;
-    }
-
-    .words-grid li {
-      background: #fff;
-      margin: 6px 0;
-      padding: 8px;
-      border-radius: 4px;
-      box-shadow: 0 0 2px rgba(0,0,0,0.1);
-      text-align: left;
-    }
   </style>
 </head>
 <body>
+  <!-- 네비게이션 -->
   <nav>
     <a onclick="location.href='mainpage.html'">홈</a>
     <a onclick="location.href='study_note.html'">어휘 학습</a>
@@ -141,23 +91,12 @@
     <div id="authContainer"></div>
   </nav>
 
-
-  <section id="statisticsSection" class="active">
-  <h3>가장 많이 검색된 단어</h3>
-
-  <div class="tabs">
-    <button class="tab active" data-period="week"  onclick="showWords('week',  event)">1주</button>
-    <button class="tab"        data-period="month" onclick="showWords('month', event)">1개월</button>
-    <button class="tab"        data-period="half"  onclick="showWords('half',  event)">6개월</button>
-    <button class="tab"        data-period="year"  onclick="showWords('year',  event)">1년</button>
+  <!-- 중앙 텍스트 -->
+  <div class="center-box">
+    학습 도구 페이지
   </div>
 
-  <div class="words-grid">
-    <ul id="wordListLeft"></ul>
-    <ul id="wordListRight"></ul>
-  </div>
-</section>
-
+  <!-- Firebase 인증 및 UI 업데이트 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
     import {
@@ -229,87 +168,6 @@
     onAuthStateChanged(auth, (user) => {
       updateAuthUI(user);
     });
-  
-  const data = [
-    { date:"2025-05-20",
-      words:[
-        {word:"happy", meaning:"행복한", synonyms:["joyful","cheerful"]},
-        {word:"fast",  meaning:"빠른",   synonyms:["quick","speedy"]}
-      ]},
-    { date:"2025-04-01",
-      words:[
-        {word:"cold",  meaning:"추운",   synonyms:["chilly","freezing"]},
-        {word:"happy", meaning:"행복한", synonyms:["joyful","cheerful"]}
-      ]},
-    { date:"2025-01-10",
-      words:[
-        {word:"sad",    meaning:"슬픈", synonyms:["gloomy","unhappy"]},
-        {word:"bright", meaning:"밝은", synonyms:["shiny","radiant"]}
-      ]}
-  ];
-
-  function getPopularWords(period){
-    const now=new Date();
-    const ranges={week:7, month:30, half:180, year:365};
-    const cutoff=new Date(now.getTime()-ranges[period]*24*60*60*1000);
-
-    const wordCount={}, wordInfo={};
-    data.forEach(entry=>{
-      if(new Date(entry.date)>=cutoff){
-        entry.words.forEach(({word,meaning,synonyms})=>{
-          wordCount[word]=(wordCount[word]||0)+1;
-          if(!wordInfo[word]) wordInfo[word]={meaning,synonyms};
-        });
-      }
-    });
-
-    return Object.entries(wordCount)
-                 .sort((a,b)=>b[1]-a[1])
-                 .slice(0,8)
-                 .map(([word])=>({word,...wordInfo[word]}));
-  }
-
-  function showWords(period, event = null) {
-  const wordListLeft = document.getElementById("wordListLeft");
-  const wordListRight = document.getElementById("wordListRight");
-
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-
-  const clicked = event?.target?.closest('button');
-  if (clicked) {
-    clicked.classList.add('active');
-  } else {
-    const fallbackBtn = document.querySelector(`.tab[data-period="${period}"]`);
-    if (fallbackBtn) fallbackBtn.classList.add('active');
-  }
-
-  const words = getPopularWords(period);
-  const left = words.slice(0, 4);
-  const right = words.slice(4, 8);
-
-  const li = w => `
-    <li>
-     <div class="word-row">
-        <div><strong>${w.word}</strong> (${w.meaning})</div>
-     </div>
-      <small>유의어: ${w.synonyms.join(', ')}</small>
-    </li>`;
-  wordListLeft.innerHTML = left.map(li).join('');
-  wordListRight.innerHTML = right.map(li).join('');
-  }
-
-  window.showWords = showWords;
-
-  function scrollAndLoadStatistics(){
-    const btn=document.querySelector('button.tab[data-period="week"]');
-    showWords('week',{target:btn});
-    document.getElementById('statisticsSection').scrollIntoView({behavior:'smooth'});
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    showWords('week', { target: document.querySelector('button.tab[data-period="week"]') });
-  });
-  
   </script>
 </body>
 </html>

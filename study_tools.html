@@ -2,85 +2,119 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>검색 결과</title>
+  <title>학습 도구</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    * {
-      box-sizing: border-box;
-    }
-    body {
+    * { box-sizing: border-box; }
+    body { 
       margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      background-color: #e0e0e0;
+      padding: 0; 
+      font-family: sans-serif; 
+      background-color: #e0e0e0; 
     }
 
-    nav {
-      padding: 10px;
-      border-bottom: 1px solid #ccc;
-      background-color: #fff;
-      display: flex;
-      justify-content: center;
+    nav { 
+      padding: 10px; 
+      border-bottom: 1px solid #ccc; 
+      background-color: #fff; 
+      display: flex; 
+      justify-content: center; 
     }
-    nav a {
-      margin-right: 10px;
-      cursor: pointer;
-      text-decoration: underline;
-      color: black;
+    nav a { 
+      margin-right: 10px; 
+      cursor: pointer; 
+      text-decoration: underline; 
+      color: black; 
     }
-    nav a:nth-child(2),
-    nav a:nth-child(3),
-    .user-menu {
-      margin-left: 15px;
-    }
+    nav a:nth-child(2), nav a:nth-child(3), .user-menu { margin-left: 15px; }
 
-    .user-menu {
-      position: relative;
-      display: inline-block;
+    .user-menu { 
+      position: relative; 
+      display: inline-block; 
     }
-    .user-dropdown {
-      display: none;
-      position: absolute;
-      background-color: #fff;
-      min-width: 160px;
-      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-      z-index: 1;
-      top: 25px;
-      right: 0;
-      border-radius: 6px;
+    .user-dropdown { 
+      display: none; 
+      position: absolute; 
+      background-color: #fff; 
+      min-width: 160px; 
+      box-shadow: 0px 8px 16px rgba(0,0,0,0.2); 
+      z-index: 1; 
+      top: 25px; 
+      right: 0; 
+      border-radius: 6px; 
     }
-    .user-dropdown a {
-      color: black;
-      padding: 12px 16px;
-      text-decoration: none;
-      display: block;
+    .user-dropdown a { 
+      color: black; 
+      padding: 12px 16px; 
+      text-decoration: none; 
+      display: block; 
     }
     .user-dropdown a:hover {
-      background-color: #ddd;
+      background-color: #ddd; 
     }
-    .user-menu:hover .user-dropdown {
+    .user-menu:hover .user-dropdown { 
       display: block;
     }
 
-    section {
-      display: none;
-      margin-top: 20px;
-      padding: 20px;
-      text-align: center;
+    /* 메인 툴 카드 레이아웃 */
+    .tools-wrap { 
+      min-height: calc(100vh - 60px); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      padding: 32px 20px; 
     }
-    section.active {
-      display: block;
+    .tool-grid { 
+      width: 100%; 
+      max-width: 1000px; 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 24px; 
     }
 
-    .center-box {
-      height: calc(100vh - 60px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      color: #444;
+    .tool-card { 
+      background: #fff; 
+      border: 2px solid #dcdcdc; 
+      border-radius: 18px; 
+      padding: 32px 16px; 
+      text-align: center; 
+      cursor: pointer; 
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; 
+      user-select: none; 
     }
-    
+    .tool-card:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+      border-color: #bdbdbd; 
+    }
+    .tool-card:active { 
+      transform: translateY(0); 
+    }
+
+    .tool-icon { 
+      font-size: 42px; 
+      margin-bottom: 14px; 
+      display: block; 
+    }
+    .tool-title { 
+      font-size: 22px; 
+      font-weight: 700; 
+      margin-bottom: 8px; 
+      color: #222; 
+    }
+    .tool-desc { 
+      font-size: 14px; 
+      color: #666; 
+    }
+
+    /* 반응형 */
+    @media (max-width: 900px) {
+      .tool-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .tool-grid { grid-template-columns: 1fr; }
+      .tool-card { padding: 28px 14px; }
+    }
   </style>
 </head>
 <body>
@@ -92,21 +126,31 @@
     <div id="authContainer"></div>
   </nav>
 
-  <!-- 중앙 텍스트 -->
-  <div class="center-box">
-    학습 도구 페이지
-  </div>
+  <!-- 메인 툴 카드 -->
+  <main class="tools-wrap">
+    <div class="tool-grid">
+      <div class="tool-card" id="card-flash" title="플래시카드">
+        <i class="fa-solid fa-clone tool-icon" aria-hidden="true"></i>
+        <div class="tool-title">플래시카드</div>
+        <div class="tool-desc">플래시카드</div>
+      </div>
+      <div class="tool-card" id="card-quiz" title="퀴즈">
+        <i class="fa-solid fa-circle-question tool-icon" aria-hidden="true"></i>
+        <div class="tool-title">퀴즈</div>
+        <div class="tool-desc">퀴즈</div>
+      </div>
+      <div class="tool-card" id="card-review" title="복습">
+        <i class="fa-solid fa-rotate-right tool-icon" aria-hidden="true"></i>
+        <div class="tool-title">복습</div>
+        <div class="tool-desc">복습</div>
+      </div>
+    </div>
+  </main>
 
   <!-- Firebase 인증 및 UI 업데이트 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
-    import {
-      getAuth,
-      GoogleAuthProvider,
-      signInWithPopup,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
@@ -125,51 +169,45 @@
 
     function login() {
       signInWithPopup(auth, provider)
-        .then((result) => {
-          console.log("로그인 성공:", result.user.displayName);
-        })
-        .catch((error) => {
-          console.error("로그인 실패:", error);
-        });
+        .then((result) => { console.log("로그인 성공:", result.user.displayName); })
+        .catch((error) => { console.error("로그인 실패:", error); });
     }
 
     function logout() {
       signOut(auth)
-        .then(() => {
-          console.log("로그아웃 완료");
-        })
-        .catch((error) => {
-          console.error("로그아웃 실패:", error);
-        });
+        .then(() => { console.log("로그아웃 완료"); })
+        .catch((error) => { console.error("로그아웃 실패:", error); });
     }
 
     function updateAuthUI(user) {
-      authContainer.innerHTML = "";
+      authContainer.innerHTML = '';
       if (user) {
-        const name = user.displayName.length > 5 ? user.displayName.slice(0, 5) : user.displayName;
+        const name = user.displayName ? (user.displayName.length > 8 ? user.displayName.slice(0, 8) + '…' : user.displayName) : (user.email || '사용자');
         authContainer.innerHTML = `
           <div class="user-menu">
-            <a href="javascript:void(0);" style="text-decoration: none">
+            <a href="javascript:void(0);" style="text-decoration:none">
               <span class="user-label">${name}</span>
-              <img src="${user.photoURL}" alt="사용자" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle;" />
+              <img src="${user.photoURL || ''}" alt="사용자" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-left:6px;"/>
             </a>
             <div class="user-dropdown">
-              <a href="#">사용자 정보</a>
+              <a href="#">${user.email}</a>
               <a href="statistics.html">통계</a>
               <a href="#" id="logoutBtn">로그아웃</a>
             </div>
-          </div>
-        `;
-        document.getElementById("logoutBtn").addEventListener("click", logout);
+          </div>`;
+        document.getElementById('logoutBtn')?.addEventListener('click', logout);
       } else {
         authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
-        document.getElementById("loginBtn").addEventListener("click", login);
+        document.getElementById('loginBtn')?.addEventListener('click', login);
       }
     }
 
-    onAuthStateChanged(auth, (user) => {
-      updateAuthUI(user);
-    });
+    onAuthStateChanged(auth, (user) => { updateAuthUI(user); });
+
+    // 카드 클릭 시 라우팅
+    document.getElementById('card-flash').addEventListener('click', () => { location.href = 'card.html'; });
+    document.getElementById('card-quiz').addEventListener('click', () => { location.href = 'quiz.html'; });
+    document.getElementById('card-review').addEventListener('click', () => { location.href = 'game.html'; });
   </script>
 </body>
 </html>
