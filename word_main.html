@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>단어장 목록</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F7F9FC;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .wordbook-card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .wordbook-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        .user-wordbook {
+            border-left: 5px solid #6366F1;
+        }
+        .auto-wordbook {
+            border-left: 5px solid #10B981;
+        }
+        .progress-bar-container {
+            background-color: #E5E7EB;
+            border-radius: 9999px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background-color: #6366F1;
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+
+    <!-- 네비게이션 바 -->
+    <header class="bg-white shadow-md py-4">
+        <nav class="container flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <a href="home.html" class="text-gray-800 text-lg font-bold">홈</a>
+                <a href="word_list_main.html" class="text-blue-600 text-lg font-bold">단어장</a>
+                <a href="#" class="text-gray-800 text-lg font-bold">학습 도구</a>
+                <a href="#" class="text-gray-800 text-lg font-bold">사용자</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="#" class="text-gray-800 text-sm font-semibold hover:text-blue-600">로그인</a>
+                <a href="#" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">회원가입</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">내 단어장 목록</h1>
+            <button class="px-4 py-2 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
+                <i class="fa-solid fa-plus mr-2"></i>새 단어장 만들기
+            </button>
+        </div>
+       
+        <!-- 정렬 및 기간 검색 옵션 -->
+        <div class="flex flex-wrap gap-4 items-center justify-between mb-8">
+            <div class="flex items-center space-x-2">
+                <span class="text-gray-600 font-semibold">정렬 기준:</span>
+                <select id="sort-select" class="rounded-md border border-gray-300 py-1 px-3 text-gray-700">
+                    <option value="date-desc">최신순</option>
+                    <option value="study-count-desc">학습 횟수순</option>
+                </select>
+            </div>
+            <button id="show-date-modal" class="py-1 px-3 rounded-full bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition">
+                <i class="fa-solid fa-calendar-days mr-2"></i>기간 검색
+            </button>
+        </div>
+
+        <div id="wordbook-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 사용자 생성 단어장 -->
+            <div class="wordbook-card user-wordbook" data-date="2025-07-10" data-study-count="15" onclick="location.href='word_list.html'">
+                <div class="flex items-center mb-4">
+                    <i class="fa-solid fa-user text-blue-600 text-xl mr-3"></i>
+                    <h3 class="text-xl font-bold text-gray-800">2025년 7월 10일 단어장</h3>
+                </div>
+                <p class="text-gray-600 mb-4">총 20개 단어 · 15개 완료</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 75%;"></div>
+                </div>
+                <p class="text-right text-sm text-gray-500 mt-2">75% 완료</p>
+            </div>
+
+            <!-- 자동 생성 단어장 (오답 단어장) -->
+            <div class="wordbook-card auto-wordbook" data-date="2025-07-09" data-study-count="3" onclick="location.href='word_list.html'">
+                <div class="flex items-center mb-4">
+                    <i class="fa-solid fa-robot text-green-600 text-xl mr-3"></i>
+                    <h3 class="text-xl font-bold text-gray-800">오답 단어장</h3>
+                </div>
+                <p class="text-gray-600 mb-4">총 10개 단어 · 3개 완료</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 30%;"></div>
+                </div>
+                <p class="text-right text-sm text-gray-500 mt-2">30% 완료</p>
+            </div>
+
+            <!-- 사용자 생성 단어장 2 -->
+            <div class="wordbook-card user-wordbook" data-date="2025-07-08" data-study-count="5" onclick="location.href='word_list.html'">
+                <div class="flex items-center mb-4">
+                    <i class="fa-solid fa-user text-blue-600 text-xl mr-3"></i>
+                    <h3 class="text-xl font-bold text-gray-800">내가 만든 단어장</h3>
+                </div>
+                <p class="text-gray-600 mb-4">총 5개 단어 · 5개 완료</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 100%; background-color: #10B981;"></div>
+                </div>
+                <p class="text-right text-sm text-gray-500 mt-2">100% 완료</p>
+            </div>
+
+            <!-- 자동 생성 단어장 2 -->
+            <div class="wordbook-card auto-wordbook" data-date="2025-07-07" data-study-count="0" onclick="location.href='word_list.html'">
+                <div class="flex items-center mb-4">
+                    <i class="fa-solid fa-robot text-green-600 text-xl mr-3"></i>
+                    <h3 class="text-xl font-bold text-gray-800">헷갈리는 단어</h3>
+                </div>
+                <p class="text-gray-600 mb-4">총 8개 단어 · 0개 완료</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 0%;"></div>
+                </div>
+                <p class="text-right text-sm text-gray-500 mt-2">0% 완료</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- 기간 검색 모달 -->
+    <div id="date-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">기간 검색</h3>
+                <button class="text-gray-500 hover:text-gray-800" onclick="closeDateModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="flex flex-col space-y-4">
+                <input type="date" id="start-date" class="p-2 border rounded-md">
+                <span class="text-center text-gray-500">~</span>
+                <input type="date" id="end-date" class="p-2 border rounded-md">
+                <button class="mt-4 py-2 px-4 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition" onclick="applyDateFilter()">검색</button>
+            </div>
+        </div>
+    </div>
+   
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const wordbookList = document.getElementById('wordbook-list');
+            const wordbookCards = Array.from(document.querySelectorAll('.wordbook-card'));
+            const sortSelect = document.getElementById('sort-select');
+            const dateModal = document.getElementById('date-modal');
+            const showDateModalBtn = document.getElementById('show-date-modal');
+           
+            // Function to sort the wordbooks
+            const sortWordbooks = () => {
+                const sortValue = sortSelect.value;
+                wordbookCards.sort((a, b) => {
+                    if (sortValue === 'date-desc') {
+                        return new Date(b.dataset.date) - new Date(a.dataset.date);
+                    } else if (sortValue === 'study-count-desc') {
+                        return parseInt(b.dataset.studyCount) - parseInt(a.dataset.studyCount);
+                    }
+                });
+               
+                // Re-append the sorted cards to the DOM
+                wordbookCards.forEach(card => wordbookList.appendChild(card));
+            };
+
+            // Event listener for sorting
+            sortSelect.addEventListener('change', sortWordbooks);
+
+            // Initial sort on page load
+            sortWordbooks();
+
+            // Modal functions
+            window.showDateModal = () => {
+                dateModal.classList.remove('hidden');
+            };
+            window.closeDateModal = () => {
+                dateModal.classList.add('hidden');
+            };
+
+            showDateModalBtn.addEventListener('click', showDateModal);
+           
+            window.applyDateFilter = () => {
+                const startDate = document.getElementById('start-date').value;
+                const endDate = document.getElementById('end-date').value;
+               
+                // This is a simulated filter. In a real application, you'd filter the data from a database.
+                console.log(`Filtering wordbooks from ${startDate} to ${endDate}`);
+                closeDateModal();
+            };
+        });
+    </script>
+</body>
+</html>

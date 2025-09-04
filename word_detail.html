@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>단어장</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F7F9FC;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .word-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .word-card.learning .status-tag {
+            background-color: #DBEAFE;
+            color: #2563EB;
+        }
+        .word-card.completed .status-tag {
+            background-color: #D1FAE5;
+            color: #16A34A;
+        }
+        .filter-link {
+            transition: color 0.2s;
+            font-weight: 600;
+        }
+        .filter-link.active {
+            color: #3B82F6;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+
+    <header class="bg-white shadow-md py-4">
+        <nav class="container flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <a href="home.html" class="text-gray-800 text-lg font-bold">홈</a>
+                <a href="word_list_main.html" class="text-blue-600 text-lg font-bold">단어장</a>
+                <a href="#" class="text-gray-800 text-lg font-bold">학습 도구</a>
+                <a href="#" class="text-gray-800 text-lg font-bold">사용자</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="#" class="text-gray-800 text-sm font-semibold hover:text-blue-600">로그인</a>
+                <a href="#" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">회원가입</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="flex flex-col sm:flex-row items-center sm:space-x-8 mb-8">
+            <div class="w-full sm:w-1/3 p-6 flex flex-col items-center bg-white rounded-xl shadow-lg">
+                <div class="relative w-36 h-36">
+                    <svg class="w-full h-full" viewBox="0 0 100 100">
+                        <circle class="text-gray-200 stroke-current" stroke-width="8" cx="50" cy="50" r="40" fill="transparent"></circle>
+                        <circle class="text-blue-600 progress-circle stroke-current" stroke-width="8" cx="50" cy="50" r="40" fill="transparent"
+                            stroke-dasharray="251.2" stroke-dashoffset="62.8" style="transition: stroke-dashoffset 0.5s ease;"></circle>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center text-3xl font-bold text-gray-800 progress-text">
+                        75%
+                    </div>
+                </div>
+            </div>
+            <div class="w-full sm:w-2/3 mt-6 sm:mt-0">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">2025년 7월 10일 단어장</h1>
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                    <label class="flex items-center space-x-1 cursor-pointer">
+                        <input type="checkbox" id="filterAll" class="filter-checkbox" data-filter="all" checked>
+                        <span>전체</span>
+                    </label>
+                    <span class="text-gray-400">|</span>
+                    <label class="flex items-center space-x-1 cursor-pointer">
+                        <input type="checkbox" class="filter-checkbox" data-filter="meaning">
+                        <span>뜻</span>
+                    </label>
+                    <span class="text-gray-400">|</span>
+                    <label class="flex items-center space-x-1 cursor-pointer">
+                        <input type="checkbox" class="filter-checkbox" data-filter="synonyms">
+                        <span>유의어</span>
+                    </label>
+                    <span class="text-gray-400">|</span>
+                    <label class="flex items-center space-x-1 cursor-pointer">
+                        <input type="checkbox" class="filter-checkbox" data-filter="antonyms">
+                        <span>반의어</span>
+                    </label>
+                    <span class="text-gray-400">|</span>
+                    <label class="flex items-center space-x-1 cursor-pointer">
+                        <input type="checkbox" class="filter-checkbox" data-filter="examples">
+                        <span>예문</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="word-card learning" data-word-id="word1" data-status="learning">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center">
+                        <h3 class="text-2xl font-bold text-gray-800 mr-2">increase</h3>
+                        <button class="px-3 py-1 rounded-full text-xs font-semibold status-tag">학습중</button>
+                    </div>
+                    <button class="text-gray-400 hover:text-blue-600 transition" onclick="showAddPopup('word1')">
+                        <i class="fa-solid fa-plus text-lg"></i>
+                    </button>
+                </div>
+                <div class="mt-4 space-y-2">
+                    <p class="meaning text-gray-700">뜻: 증가하다, 증가</p>
+                    <p class="synonyms text-gray-700">유의어: rise, mount</p>
+                    <p class="antonyms text-gray-700">반의어: decrease, lessen</p>
+                    <p class="examples text-gray-700">예문: The population has increased from 1.2 million to 1.8 million.</p>
+                </div>
+            </div>
+
+            <div class="word-card completed" data-word-id="word2" data-status="completed">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center">
+                        <h3 class="text-2xl font-bold text-gray-800 mr-2">decrease</h3>
+                        <button class="px-3 py-1 rounded-full text-xs font-semibold status-tag">학습완료</button>
+                    </div>
+                    <button class="text-gray-400 hover:text-blue-600 transition" onclick="showAddPopup('word2')">
+                        <i class="fa-solid fa-plus text-lg"></i>
+                    </button>
+                </div>
+                <div class="mt-4 space-y-2">
+                    <p class="meaning text-gray-700">뜻: 감소하다, 감소</p>
+                    <p class="synonyms text-gray-700">유의어: diminish, lessen</p>
+                    <p class="antonyms text-gray-700">반의어: increase, grow</p>
+                    <p class="examples text-gray-700">예문: The number of new cases is decreasing.</p>
+                </div>
+            </div>
+
+            <div class="word-card learning" data-word-id="word3" data-status="learning">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center">
+                        <h3 class="text-2xl font-bold text-gray-800 mr-2">gain</h3>
+                        <button class="px-3 py-1 rounded-full text-xs font-semibold status-tag">학습중</button>
+                    </div>
+                    <button class="text-gray-400 hover:text-blue-600 transition" onclick="showAddPopup('word3')">
+                        <i class="fa-solid fa-plus text-lg"></i>
+                    </button>
+                </div>
+                <div class="mt-4 space-y-2">
+                    <p class="meaning text-gray-700">뜻: 얻다, 증가하다</p>
+                    <p class="synonyms text-gray-700">유의어: acquire, obtain</p>
+                    <p class="antonyms text-gray-700">반의어: lose, forfeit</p>
+                    <p class="examples text-gray-700">예문: He gained a lot of experience.</p>
+                </div>
+            </div>
+           
+            <div class="word-card completed" data-word-id="word4" data-status="completed">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center">
+                        <h3 class="text-2xl font-bold text-gray-800 mr-2">lose</h3>
+                        <button class="px-3 py-1 rounded-full text-xs font-semibold status-tag">학습완료</button>
+                    </div>
+                    <button class="text-gray-400 hover:text-blue-600 transition" onclick="showAddPopup('word4')">
+                        <i class="fa-solid fa-plus text-lg"></i>
+                    </button>
+                </div>
+                <div class="mt-4 space-y-2">
+                    <p class="meaning text-gray-700">뜻: 잃다, 지다</p>
+                    <p class="synonyms text-gray-700">유의어: misplace, forfeit</p>
+                    <p class="antonyms text-gray-700">반의어: gain, win</p>
+                    <p class="examples text-gray-700">예문: I don't want to lose my keys.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="addWordModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">단어 추가</h3>
+                <button class="text-gray-500 hover:text-gray-800" onclick="closeAddPopup()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p class="mb-4">단어를 추가할 단어장을 선택하세요.</p>
+            <div class="space-y-4">
+                <button class="w-full py-3 px-4 rounded-lg bg-gray-100 text-gray-800 font-semibold hover:bg-gray-200 transition">
+                    내가 만든 단어장
+                </button>
+                <button class="w-full py-3 px-4 rounded-lg bg-gray-100 text-gray-800 font-semibold hover:bg-gray-200 transition">
+                    오답 단어장
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const filterCheckboxes = document.querySelectorAll('.filter-checkbox');
+            const filterAllCheckbox = document.getElementById('filterAll');
+            const wordCards = document.querySelectorAll('.word-card');
+            const statusButtons = document.querySelectorAll('.status-tag');
+            const progressCircle = document.querySelector('.progress-circle');
+            const progressText = document.querySelector('.progress-text');
+            const modal = document.getElementById('addWordModal');
+           
+            // Initial update of progress bar
+            updateProgress();
+
+            // Filter logic with checkboxes
+            filterCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', (event) => {
+                    const isAllCheckbox = event.target.dataset.filter === 'all';
+
+                    if (isAllCheckbox) {
+                        if (event.target.checked) {
+                            // '전체'가 선택되면 나머지 체크박스를 해제하고 모든 내용을 표시
+                            filterCheckboxes.forEach(cb => {
+                                if (cb !== filterAllCheckbox) {
+                                    cb.checked = false;
+                                }
+                            });
+                            showAllContent();
+                        } else {
+                            // '전체'가 해제되면 아무것도 선택되지 않도록 유지
+                            showFilteredContent([]);
+                        }
+                    } else {
+                        // '전체'가 아닌 다른 체크박스가 선택되면 '전체'를 해제
+                        if (event.target.checked) {
+                            filterAllCheckbox.checked = false;
+                        }
+
+                        const activeFilters = Array.from(filterCheckboxes)
+                            .filter(cb => cb.checked)
+                            .map(cb => cb.dataset.filter);
+
+                        // 모든 체크박스가 해제되면 '전체'를 다시 선택
+                        if (activeFilters.length === 0) {
+                            filterAllCheckbox.checked = true;
+                            showAllContent();
+                        } else {
+                            showFilteredContent(activeFilters);
+                        }
+                    }
+                });
+            });
+
+            function showAllContent() {
+                wordCards.forEach(card => {
+                    const cardElements = card.querySelectorAll('.meaning, .synonyms, .antonyms, .examples');
+                    cardElements.forEach(el => el.style.display = 'block');
+                });
+            }
+
+            function showFilteredContent(filters) {
+                wordCards.forEach(card => {
+                    const cardElements = card.querySelectorAll('.meaning, .synonyms, .antonyms, .examples');
+                    cardElements.forEach(el => el.style.display = 'none');
+                    filters.forEach(filter => {
+                        const elementToShow = card.querySelector(`.${filter}`);
+                        if (elementToShow) {
+                            elementToShow.style.display = 'block';
+                        }
+                    });
+                });
+            }
+
+            // Status toggle and progress update logic
+            statusButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const card = button.closest('.word-card');
+                    if (card) {
+                        if (card.dataset.status === 'learning') {
+                            card.dataset.status = 'completed';
+                            card.classList.remove('learning');
+                            card.classList.add('completed');
+                            button.textContent = '학습완료';
+                        } else {
+                            card.dataset.status = 'learning';
+                            card.classList.remove('completed');
+                            card.classList.add('learning');
+                            button.textContent = '학습중';
+                        }
+                        updateProgress();
+                    }
+                });
+            });
+
+            function updateProgress() {
+                const totalWords = wordCards.length;
+                const completedWords = document.querySelectorAll('.word-card.completed').length;
+                const percentage = totalWords > 0 ? Math.round((completedWords / totalWords) * 100) : 0;
+               
+                progressText.textContent = `${percentage}%`;
+               
+                const circumference = 2 * Math.PI * 40; // 2 * PI * r (r=40)
+                const offset = circumference - (percentage / 100) * circumference;
+                progressCircle.style.strokeDashoffset = offset;
+            }
+
+            // Popup logic
+            function showAddPopup(wordId) {
+                modal.classList.remove('hidden');
+            }
+
+            function closeAddPopup() {
+                modal.classList.add('hidden');
+            }
+
+            window.showAddPopup = showAddPopup;
+            window.closeAddPopup = closeAddPopup;
+        });
+    </script>
+</body>
+</html>

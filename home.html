@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>홈</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F7F9FC;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 네비게이션 바 -->
+    <header class="bg-white shadow-md py-4">
+        <nav class="container flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <a href="home.html" class="text-blue-600 text-lg font-bold">홈</a>
+                <a href="word_list_main.html" class="text-gray-800 text-lg font-bold">단어장</a>
+                <a href="study_tools.html" class="text-gray-800 text-lg font-bold">학습 도구</a>
+                <a href="user.html" class="text-gray-800 text-lg font-bold">사용자</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="#" class="text-gray-800 text-sm font-semibold hover:text-blue-600">로그인</a>
+                <a href="#" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">회원가입</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- 메인 타이틀 및 검색 섹션 -->
+        <section class="text-center my-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">단어를 검색하고<br>나만의 단어장을 만들어 보세요</h1>
+            <p class="text-lg text-gray-500 mb-8">검색만 해도 자동으로 단어장이 생성됩니다</p>
+            <div class="relative max-w-2xl mx-auto">
+                <input type="text" placeholder="단어를 검색하고 나만의 단어장을 만들어 보세요" class="w-full px-6 py-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-lg">
+                <button class="absolute right-0 top-0 mt-4 mr-6 text-gray-400 hover:text-blue-600 transition">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- 학습 현황 대시보드 -->
+        <section class="bg-white p-6 rounded-xl shadow-lg mt-12">
+            <h2 class="text-2xl font-bold mb-6">나의 학습 현황</h2>
+            <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <!-- 총 학습 단어 카드 -->
+                <div class="p-6 rounded-lg bg-blue-50 flex-1">
+                    <h3 class="text-base font-semibold text-gray-800 mb-2">총 학습 단어</h3>
+                    <p class="text-4xl font-bold text-blue-600 mb-2">1,250개</p>
+                    <p class="text-xs text-gray-500">지난주보다 50개 더 학습했어요!</p>
+                </div>
+                <!-- 퀴즈 참여 횟수 카드 -->
+                <div class="p-6 rounded-lg bg-green-50 flex-1">
+                    <h3 class="text-base font-semibold text-gray-800 mb-2">퀴즈 참여 횟수</h3>
+                    <p class="text-4xl font-bold text-green-600 mb-2">15회</p>
+                    <p class="text-xs text-gray-500">오답노트를 활용해 복습해보세요.</p>
+                </div>
+                <!-- 오늘의 목표 단어 카드 -->
+                <div class="p-6 rounded-lg bg-yellow-50 flex-1">
+                    <h3 class="text-base font-semibold text-gray-800 mb-2">오늘의 목표 단어</h3>
+                    <p class="text-4xl font-bold text-yellow-600 mb-2">20개</p>
+                    <p class="text-xs text-gray-500">오늘도 화이팅!</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+</body>
+</html>

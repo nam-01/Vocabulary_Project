@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>검색 결과</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F7F9FC;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .word-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+        .word-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- 네비게이션 바 -->
+    <header class="bg-white shadow-md py-4">
+        <nav class="container flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <a href="#" class="text-blue-600 text-lg font-bold">홈</a>
+                <a href="#" class="text-gray-800 text-lg font-bold">단어장</a>
+                <a href="#" class="text-gray-800 text-lg font-bold">학습 도구</a>
+                <a href="#" class="text-gray-800 text-lg font-bold">사용자</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="#" class="text-gray-800 text-sm font-semibold hover:text-blue-600">로그인</a>
+                <a href="#" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">회원가입</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- 검색 섹션 -->
+        <section class="flex flex-col sm:flex-row justify-center items-center my-8">
+            <div class="relative w-full sm:w-1/2">
+                <input type="text" placeholder="단어 검색" class="w-full px-6 py-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-lg">
+                <button class="absolute right-0 top-0 mt-4 mr-6 text-gray-400 hover:text-blue-600 transition">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- 단어 정보 -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mt-8">
+            <h2 class="text-3xl font-bold mb-4">increase</h2>
+            <div class="space-y-4">
+                <div class="flex items-start space-x-2">
+                    <h3 class="font-semibold text-gray-700 flex-shrink-0">뜻:</h3>
+                    <p class="text-gray-900">증가하다, 늘리다</p>
+                </div>
+                <div class="flex items-start space-x-2">
+                    <h3 class="font-semibold text-gray-700 flex-shrink-0">유의어:</h3>
+                    <p class="text-gray-900">gain, enlargement</p>
+                </div>
+                <div class="flex items-start space-x-2">
+                    <h3 class="font-semibold text-gray-700 flex-shrink-0">반의어:</h3>
+                    <p class="text-gray-900">decrease, lessen</p>
+                </div>
+                <div class="flex items-start space-x-2">
+                    <h3 class="font-semibold text-gray-700 flex-shrink-0">예문:</h3>
+                    <p class="text-gray-900">She says an increase in melting from climate change may put that at risk.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>
