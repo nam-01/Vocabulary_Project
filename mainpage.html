@@ -95,7 +95,6 @@
       padding: 5px 0;
       border-bottom: 1px solid #eee;
     }
-    
 
     .hint-box {
       margin-top: 10px;
@@ -262,28 +261,27 @@
   }
 
   function updateAuthUI(user) {
-    authContainer.innerHTML = "";
-    if (user) {
-      const name = user.displayName.length > 5 ? user.displayName.slice(0, 5) : user.displayName;
-      authContainer.innerHTML = `
-        <div class="user-menu">
-          <a href="javascript:void(0);" style="text-decoration: none">
-            <span class="user-label">${name}</span>
-            <img src="${user.photoURL}" alt="사용자" class="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; vertical-align: middle;" />
-          </a>
-          <div class="user-dropdown">
-            <a href="#">사용자 정보</a>
-            <a href="statistics.html">통계</a>
-            <a href="#" id="logoutBtn">로그아웃</a>
-          </div>
-        </div>
-      `;
-      document.getElementById("logoutBtn").addEventListener("click", logout);
-    } else {
-      authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
-      document.getElementById("loginBtn").addEventListener("click", login);
+      authContainer.innerHTML = '';
+      if (user) {
+        const name = user.displayName ? (user.displayName.length>8 ? user.displayName.slice(0,8)+'…' : user.displayName) : (user.email || '사용자');
+        authContainer.innerHTML = `
+          <div class="user-menu">
+            <a href="javascript:void(0);" style="text-decoration:none">
+              <span class="user-label">${name}</span>
+              <img src="${user.photoURL || ''}" alt="사용자" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-left:6px;"/>
+            </a>
+            <div class="user-dropdown">
+              <a href="#">${user.email}</a>
+              <a href="statistics.html">통계</a>
+              <a href="#" id="logoutBtn">로그아웃</a>
+            </div>
+          </div>`;
+        document.getElementById('logoutBtn')?.addEventListener('click', logout);
+      } else {
+        authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
+        document.getElementById('loginBtn')?.addEventListener('click', login);
+      }
     }
-  }
 
   onAuthStateChanged(auth, (user) => {
     updateAuthUI(user);

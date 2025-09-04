@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>카드 학습 게임</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; 
+    }
+
+    body { 
+      margin:0; 
+      padding:0;
+      font-family:sans-serif;
+      background:#e0e0e0; 
+    }
+
+    nav { 
+      padding:10px; 
+      border-bottom:1px solid #ccc; 
+      background:#fff; 
+      display:flex; 
+      justify-content:center; 
+    }
+
+    nav a { 
+      margin-right:10px; 
+      cursor:pointer; 
+      text-decoration:underline; 
+      color:black; 
+    }
+
+    nav a:nth-child(2), nav a:nth-child(3), .user-menu { margin-left:15px; }
+    .user-menu { 
+      position:relative; 
+      display:inline-block; 
+    }
+    .user-dropdown { 
+      display:none; 
+      position:absolute; 
+      background:#fff; 
+      min-width:160px; 
+      box-shadow:0 8px 16px rgba(0,0,0,0.2); 
+      z-index:1; 
+      top:25px; 
+      right:0; 
+      border-radius:6px; 
+    }
+    .user-dropdown a { 
+      color:black; 
+      padding:12px 16px; 
+      text-decoration:none; 
+      display:block; 
+    }
+    .user-dropdown a:hover { 
+      background:#ddd; 
+    }
+    .user-menu:hover .user-dropdown { 
+      display:block; 
+    }
+    .page-title { 
+      text-align:center; 
+      margin:18px 0 4px; 
+      font-size:26px; 
+      font-weight:800; 
+      color:#222; 
+    }
+    #sub-title { 
+      text-align:center; 
+      margin:0 0 12px; 
+      font-size:14px; 
+      color:#666; 
+    }
+    #status-bar { 
+      text-align:center; 
+      font-size:14px; 
+      color:#555; 
+      margin:10px 0; 
+    }
+
+
+
+    .game-wrap { 
+      max-width: 860px; 
+      margin: 12px auto 24px; 
+      padding: 0 16px; 
+    }
+    .card-box { 
+      position: relative; 
+      margin: 0 auto 14px; 
+      width: 100%; max-width: 680px; 
+      min-height: 160px; background: #fff; border: 2px solid #d4d4d4; border-radius: 18px; padding: 28px; box-shadow: 0 8px 18px rgba(0,0,0,0.08); 
+      display: flex; align-items: center; 
+      justify-content: center; 
+      text-align: center; 
+    }
+    .q { font-size: 28px; 
+      font-weight: 800; 
+      color:#222; 
+    }
+
+
+
+    .choices { max-width: 680px; 
+      margin: 12px auto 0; 
+      display:grid; 
+      grid-template-columns: 1fr; 
+      gap:10px; 
+    }
+    .choice { 
+      padding:12px 14px; 
+      background:#fff; 
+      border:1px solid #cfcfcf; 
+      border-radius:12px; 
+      cursor:pointer; 
+      text-align:center; 
+      font-size:16px; 
+      transition:.15s ease; 
+    }
+    .choice:hover { 
+      transform: translateY(-1px); 
+      box-shadow: 0 8px 16px rgba(0,0,0,.08); 
+    }
+    .choice.correct { 
+      background:#e8f7e9; 
+      border-color:#7fd18a; 
+    }
+    .choice.wrong { 
+      background:#ffe7e7; 
+      border-color:#ff9a9a; 
+    }
+    .choice.disabled { 
+      opacity:.7; 
+      pointer-events:none; 
+    }
+
+
+    .controls { 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+      gap:10px; 
+      margin-top:14px; 
+      flex-wrap:wrap; 
+    }
+    .btn { padding: 10px 14px; 
+      border-radius: 10px; 
+      border: 1px solid #bbb; background: #f7f7f7; cursor: pointer; font-size: 14px; 
+    }
+    .btn:hover { 
+      background:#ececec; 
+    }
+    .progress { 
+      text-align:center; 
+      margin-top: 8px; 
+      font-size: 13px; 
+      color:#666; 
+    }
+    .summary { 
+      text-align:center; 
+      margin-top: 18px; 
+      font-weight:700; 
+    }
+
+
+      
+    .wrong-list { 
+      max-width:680px; 
+      margin:18px auto; 
+      background:#fff; 
+      border-radius:10px; 
+      padding:12px; 
+    }
+    .wrong-item { 
+      display:flex; 
+      flex-direction:column; 
+      gap:4px; padding:10px; 
+      border:1px solid #eee; 
+      border-radius:10px; 
+    }
+    .wrong-word { 
+      font-weight:700; 
+    }
+    .tag { 
+      display:inline-block; 
+      padding:2px 8px; 
+      border-radius:999px; 
+      font-size:12px; 
+    }
+    .tag.correct { 
+      background:#e8f7e9; 
+      border:1px solid #7fd18a; 
+    }
+    .tag.chosen { 
+      background:#ffe7e7; 
+      border:1px solid #ff9a9a; 
+    }
+
+  </style>
+</head>
+<body>
+  <nav>
+    <a onclick="location.href='mainpage.html'">홈</a>
+    <a onclick="location.href='study_note.html'">어휘 학습</a>
+    <a onclick="location.href='study_tools.html'">학습 도구</a>
+    <div id="authContainer"></div>
+  </nav>
+
+  <h1 class="page-title">카드 학습 게임</h1>
+  <div id="sub-title"></div>
+  <div id="status-bar"></div>
+
+  <main class="game-wrap" id="game" style="display:none;">
+    <div class="card-box">
+      <div id="q" class="q">단어를 불러오는 중…</div>
+    </div>
+
+    <div id="choices" class="choices"></div>
+
+    <div class="controls">
+      <button class="btn" id="btn-next" disabled>다음</button>
+      <button class="btn" id="btn-restart" style="display:none;">다시하기</button>
+      <button class="btn" id="btn-retry-wrong" style="display:none;">오답만 다시 풀기</button>
+      <button class="btn" id="btn-back">목록으로</button>
+    </div>
+
+    <div id="progress" class="progress"></div>
+    <div id="summary" class="summary"></div>
+    <div id="wrong-answers" class="wrong-list" style="display:none;"></div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, Timestamp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
+      authDomain: "auto-dictionary-29936.firebaseapp.com",
+      projectId: "auto-dictionary-29936",
+      storageBucket: "auto-dictionary-29936.appspot.com",
+      messagingSenderId: "103494421267",
+      appId: "1:103494421267:web:6762683fac5ac130e468e6",
+      measurementId: "G-EKSJXHHRYS"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+    const provider = new GoogleAuthProvider();
+
+    const authContainer = document.getElementById('authContainer');
+    const subTitle = document.getElementById('sub-title');
+    const statusBar = document.getElementById('status-bar');
+    const game = document.getElementById('game');
+    const qEl = document.getElementById('q');
+    const choicesEl = document.getElementById('choices');
+    const btnNext = document.getElementById('btn-next');
+    const btnRestart = document.getElementById('btn-restart');
+    const btnRetryWrong = document.getElementById('btn-retry-wrong');
+    const btnBack = document.getElementById('btn-back');
+    const progressEl = document.getElementById('progress');
+    const summaryEl = document.getElementById('summary');
+    const wrongEl = document.getElementById('wrong-answers');
+
+
+    function login(){ signInWithPopup(auth, provider).catch(e=>{console.error(e); alert('로그인 중 오류');}); }
+    function logout(){ signOut(auth).catch(e=>{console.error(e); alert('로그아웃 중 오류');}); }
+    function updateAuthUI(user) {
+      authContainer.innerHTML = '';
+      if (user) {
+        const name = user.displayName ? (user.displayName.length>8 ? user.displayName.slice(0,8)+'…' : user.displayName) : (user.email || '사용자');
+        authContainer.innerHTML = `
+          <div class="user-menu">
+            <a href="javascript:void(0);" style="text-decoration:none">
+              <span class="user-label">${name}</span>
+              <img src="${user.photoURL || ''}" alt="사용자" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-left:6px;"/>
+            </a>
+            <div class="user-dropdown">
+              <a href="#">${user.email}</a>
+              <a href="statistics.html">통계</a>
+              <a href="#" id="logoutBtn">로그아웃</a>
+            </div>
+          </div>`;
+        document.getElementById('logoutBtn')?.addEventListener('click', logout);
+      } else {
+        authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
+        document.getElementById('loginBtn')?.addEventListener('click', login);
+      }
+    }
+
+    onAuthStateChanged(auth, (user)=>{ updateAuthUI(user); });
+
+
+    const params = new URLSearchParams(window.location.search);
+    const selectedDate = params.get('date');
+    if(selectedDate){ subTitle.textContent = `선택한 날짜: ${selectedDate}`; }
+    else { subTitle.textContent = '날짜 정보가 전달되지 않았습니다.'; }
+
+
+    function toKstDateString(v){
+      try{
+        if(!v) return null;
+        let d;
+        if(typeof v?.toDate === 'function') d = v.toDate();
+        else if(v instanceof Timestamp) d = v.toDate();
+        else if(typeof v === 'object' && 'seconds' in v && 'nanoseconds' in v){
+          d = new Date(v.seconds*1000 + Math.floor(v.nanoseconds/1e6));
+        } else if(typeof v === 'number') d = new Date(v);
+        else d = new Date(v);
+        if(isNaN(d.getTime())) return null;
+        return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+      }catch(e){ console.warn('날짜 변환 실패:', v, e); return null; }
+    }
+    const arrayOrEmpty = (v)=> Array.isArray(v) ? v : (v==null || v==='' ? [] : [String(v)]);
+
+
+    let deck = [];        
+    let order = [];      
+    let i = 0;            
+    let answered = false;   
+    let score = 0;     
+    let wrongList = [];   
+
+
+    async function loadDeck(user){
+      if(!selectedDate){ statusBar.textContent = '날짜 파라미터가 없어 목록으로 돌아갑니다.'; return; }
+      statusBar.textContent = '데이터 불러오는 중…';
+      const snap = await getDocs(query(collection(db,'users', user.email, 'searchHistory')));
+      const list = [];
+      snap.forEach(doc=>{
+        const d = doc.data();
+        const day = toKstDateString(d.searchedAt);
+        if(day !== selectedDate) return;
+        const meanings = arrayOrEmpty(d.meaning).map(x=>String(x).trim()).filter(Boolean);
+        if(!d.word || meanings.length===0) return;
+        list.push({ word: d.word, meanings });
+      });
+
+      if(list.length === 0){
+        statusBar.textContent = '해당 날짜에 학습할 단어가 없습니다.';
+        game.style.display = 'none';
+        return;
+      }
+
+
+      order = [...Array(list.length).keys()];
+      for(let j=order.length-1;j>0;j--){ const k=Math.floor(Math.random()*(j+1)); [order[j],order[k]]=[order[k],order[j]]; }
+
+      deck = list;
+      score = 0; i = 0; answered = false; wrongList = [];
+      statusBar.textContent = '';
+      game.style.display = '';
+      renderQuestion();
+    }
+
+    function pickCorrectText(meanings){
+      return meanings.slice(0,2).join(', ');
+    }
+
+    function getDistractorPool(exceptIndex){
+      const pool = [];
+      for(let idx=0; idx<deck.length; idx++){
+        if(idx === exceptIndex) continue;
+        const m = deck[idx].meanings;
+        if(m && m.length){ pool.push(m[0].trim()); }
+      }
+      const set = new Set(pool.filter(Boolean));
+      return [...set];
+    }
+
+    function sample(array, n, avoidSet){
+      const arr = array.filter(v=> !avoidSet.has(v));
+      for(let j=arr.length-1;j>0;j--){ const k=Math.floor(Math.random()*(j+1)); [arr[j],arr[k]]=[arr[k],arr[j]]; }
+      return arr.slice(0,n);
+    }
+
+    function renderQuestion(){
+      const total = deck.length;
+      const realIndex = order[i];
+      const item = deck[realIndex];
+
+      qEl.textContent = item.word;
+      progressEl.textContent = `${i+1} / ${total}`;
+      summaryEl.textContent = '';
+      wrongEl.style.display = 'none';
+      btnNext.disabled = true;
+      btnRestart.style.display = 'none';
+      btnRetryWrong.style.display = 'none';
+      btnNext.textContent = '다음';
+
+
+      const correct = pickCorrectText(item.meanings);
+      const avoid = new Set([correct]);
+      const distractorPool = getDistractorPool(realIndex);
+      let distractors = sample(distractorPool, 4, avoid);
+
+
+      if(distractors.length < 4){
+        const extras = item.meanings.slice(2).filter(x=> !avoid.has(x));
+        distractors = [...distractors, ...extras].slice(0,4);
+      }
+      while(distractors.length < 4){ distractors.push('(보기 없음)'); }
+
+      const options = [correct, ...distractors];
+
+      for(let j=options.length-1;j>0;j--){ const k=Math.floor(Math.random()*(j+1)); [options[j],options[k]]=[options[k],options[j]]; }
+
+
+      choicesEl.innerHTML = '';
+      options.forEach(text => {
+        const btn = document.createElement('button');
+        btn.className = 'choice';
+        btn.textContent = text;
+        btn.addEventListener('click', ()=> handleSelect(btn, text, correct, item.word));
+        choicesEl.appendChild(btn);
+      });
+      answered = false;
+    }
+
+    function handleSelect(btn, text, correct, word){
+      if(answered) return;
+      answered = true;
+      const nodes = [...choicesEl.querySelectorAll('.choice')];
+
+
+      if(text === correct){
+        btn.classList.add('correct');
+        score++;
+      } else {
+        btn.classList.add('wrong');
+        const ans = nodes.find(n => n.textContent === correct);
+        if(ans) ans.classList.add('correct');
+        wrongList.push({ word, correctText: correct, chosenText: text });
+      }
+
+      nodes.forEach(n => n.classList.add('disabled'));
+      btnNext.disabled = false;
+
+
+      if(i === deck.length - 1){
+        btnNext.textContent = '결과';
+      } else {
+        btnNext.textContent = '다음';
+      }
+    }
+
+    function next(){
+      if(i < deck.length - 1){
+        i++;
+        renderQuestion();
+      } else {
+        showReview();
+      }
+    }
+
+    function restart(){
+      order = [...Array(deck.length).keys()];
+      for(let j=order.length-1;j>0;j--){ const k=Math.floor(Math.random()*(j+1)); [order[j],order[k]]=[order[k],order[j]]; }
+      i = 0; score = 0; answered = false; wrongList = [];
+      renderQuestion();
+    }
+
+    function retryWrong(){
+      if(wrongList.length === 0){ restart(); return; }
+      const words = new Set(wrongList.map(w=> w.word));
+      const newDeck = deck.filter(d => words.has(d.word));
+      deck = newDeck;
+      order = [...Array(deck.length).keys()];
+      for(let j=order.length-1;j>0;j--){ const k=Math.floor(Math.random()*(j+1)); [order[j],order[k]]=[order[k],order[j]]; }
+      i = 0; score = 0; answered = false; wrongList = [];
+      renderQuestion();
+    }
+
+    function showReview(){
+      choicesEl.innerHTML = '';
+      const total = deck.length;
+      qEl.textContent = '오답 보기';
+      progressEl.textContent = `${total} / ${total}`;
+      summaryEl.textContent = `총 정답: ${score} / ${total}`;
+
+      wrongEl.innerHTML = '';
+      if(wrongList.length === 0){
+        wrongEl.style.display = 'block';
+        const ok = document.createElement('div');
+        ok.className = 'choice correct';
+        ok.style.cursor = 'default';
+        ok.textContent = '오답이 없습니다. 모두 정답!';
+        wrongEl.appendChild(ok);
+      } else {
+        wrongEl.style.display = 'block';
+        wrongList.forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'wrong-item';
+          row.innerHTML = `
+            <div class="wrong-word">${item.word}</div>
+            <div><span class="tag chosen">내 선택</span> ${item.chosenText}</div>
+            <div><span class="tag correct">정답</span> ${item.correctText}</div>
+          `;
+          wrongEl.appendChild(row);
+        });
+      }
+
+      btnNext.disabled = true;
+      btnRestart.style.display = '';
+      btnRetryWrong.style.display = '';
+    }
+
+    btnNext.addEventListener('click', next);
+    btnRestart.addEventListener('click', restart);
+    btnRetryWrong.addEventListener('click', retryWrong);
+    btnBack.addEventListener('click', ()=>{ location.href = 'card.html'; });
+
+
+    window.addEventListener('keydown', (e)=>{
+      if(e.target && ['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+      const n = Number(e.key);
+      if(n>=1 && n<=5){
+        const btn = choicesEl.querySelectorAll('.choice')[n-1];
+        if(btn) btn.click();
+      } else if(e.key === 'Enter'){
+        if(!btnNext.disabled) next();
+      }
+    });
+
+    onAuthStateChanged(auth, async (user)=>{
+      updateAuthUI(user);
+      if(!user){ statusBar.textContent = '로그인 후 이용해주세요.'; return; }
+      try{ await loadDeck(user); }catch(err){ console.error(err); statusBar.textContent = '불러오기 실패: ' + (err?.message||err); }
+    });
+  </script>
+</body>
+</html>

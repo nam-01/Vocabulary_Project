@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>학습 도구 웹</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="mainpage.css">
+</head>
+<body>
+  <!-- 네비게이션 -->
+  <nav>
+    <a onclick="showSection('home')">홈</a>
+    <a onclick="showSection('vocab')">어휘 학습</a>
+    <a onclick="showSection('tools')">학습 도구 ▼</a>
+    <div id="authContainer"></div>
+  </nav>
+
+  <!-- 홈 섹션 -->
+  <section id="home" class="active">
+    <div class="search-container">
+      <div class="search-wrapper">
+        <input type="text" id="searchInput" class="search-box" placeholder="검색어를 입력하세요" autocomplete="off">
+        <button class="search-button" onclick="search()">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      <div class="history-box" id="searchHistory"></div>
+    </div>
+
+    <div id="hintBox" class="hint-box">
+      <div id="suggestionRow" class="suggestion-row"></div>
+    </div>
+
+    <div id="searchResult" class="search-result"></div>
+  </section>
+
+  <!-- 어휘 학습 -->
+  <section id="vocab">
+    <h1>어휘 학습 페이지</h1>
+    <p>이 페이지는 어휘 학습을 도와주는 페이지입니다.</p>
+  </section>
+
+  <!-- 학습 도구 -->
+  <section id="tools">
+    <h1>학습 도구 페이지</h1>
+    <p>이 페이지는 학습 도구들을 제공하는 페이지입니다.</p>
+  </section>
+
+  <!-- 사용자 섹션 -->
+  <section id="user">
+    <h1>사용자</h1>
+  </section>
+
+  <!-- Firebase SDK 및 사용자 상태 관리 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
+      authDomain: "auto-dictionary-29936.firebaseapp.com",
+      projectId: "auto-dictionary-29936",
+      storageBucket: "auto-dictionary-29936.appspot.com",
+      messagingSenderId: "103494421267",
+      appId: "1:103494421267:web:6762683fac5ac130e468e6",
+      measurementId: "G-EKSJXHHRYS"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    const authContainer = document.getElementById("authContainer");
+
+    function login() {
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          console.log("로그인 성공:", result.user.displayName);
+        })
+        .catch((error) => {
+          console.error("로그인 실패:", error);
+        });
+    }
+
+    function logout() {
+      signOut(auth)
+        .then(() => {
+          console.log("로그아웃 완료");
+        })
+        .catch((error) => {
+          console.error("로그아웃 실패:", error);
+        });
+    }
+
+    function updateAuthUI(user) {
+      authContainer.innerHTML = "";
+      if (user) {
+        const name = user.displayName.length > 5 ? user.displayName.slice(0, 5) : user.displayName;
+        authContainer.innerHTML = `
+          <div class="user-menu">
+            <a href="javascript:void(0);" style="text-decoration: none">
+              <span class="user-label">${name}</span>
+              <img src="${user.photoURL}" alt="사용자" class="user-avatar" />
+            </a>
+            <div class="user-dropdown">
+              <a href="#">사용자 정보</a>
+              <a href="#">통계</a>
+              <a href="#" id="logoutBtn">로그아웃</a>
+            </div>
+          </div>
+        `;
+        document.getElementById("logoutBtn").addEventListener("click", logout);
+      } else {
+        authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
+        document.getElementById("loginBtn").addEventListener("click", login);
+      }
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      updateAuthUI(user);
+    });
+  </script>
+
+  <!-- 탭 & 검색 스크립트 -->
+  <script>
+    function showSection(id) {
+      document.querySelectorAll('section').forEach(sec => {
+        sec.classList.remove('active');
+      });
+      document.getElementById(id).classList.add('active');
+    }
+
+    const input = document.getElementById("searchInput");
+    const hintBox = document.getElementById("hintBox");
+    const suggestionRow = document.getElementById("suggestionRow");
+    const searchResult = document.getElementById("searchResult");
+    const historyBox = document.getElementById("searchHistory");
+
+    let suggestions = ['apple', 'house', 'food', 'feel', 'bear', 'banana', 'fruit', 'mouse', 'air', 'pen', 'phone', 'glass'];
+
+    function renderSuggestions() {
+      suggestionRow.innerHTML = '';
+      suggestions.forEach(word => {
+        const item = document.createElement('div');
+        item.className = 'suggestion-item';
+        item.innerHTML = `
+          <span onclick="goToResult('${word}')">${word}</span>
+          <button class="delete-btn" onclick="deleteSuggestion('${word}')">×</button>
+        `;
+        suggestionRow.appendChild(item);
+      });
+    }
+
+    function deleteSuggestion(word) {
+      suggestions = suggestions.filter(item => item !== word);
+      renderSuggestions();
+    }
+
+    function updateHistory(query) {
+      let history = JSON.parse(localStorage.getItem("guestHistory") || "[]");
+      history = history.filter(item => item !== query);
+      history.unshift(query);
+      if (history.length > 10) history.pop();
+      localStorage.setItem("guestHistory", JSON.stringify(history));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem("guestHistory") || "[]");
+      historyBox.innerHTML = history.map(item => `<div>${item}</div>`).join("");
+    }
+
+    input.addEventListener("input", function () {
+      if (input.value.trim() !== "") {
+        hintBox.style.display = "flex";
+        renderSuggestions();
+      } else {
+        hintBox.style.display = "none";
+      }
+    });
+
+    input.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        search();
+      }
+    });
+
+    function search() {
+      const query = input.value.trim();
+      if (query) {
+        updateHistory(query);
+        goToResult(query);
+      }
+    }
+
+    function goToResult(query) {
+      searchResult.innerText = `검색결과 : ${query}`;
+    }
+
+    // 최초 로딩 시 검색기록 표시
+    renderHistory();
+  </script>
+</body>
+</html>
