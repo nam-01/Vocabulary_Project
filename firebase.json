@@ -1,16 +1,15 @@
 {
   "hosting": {
-    "public": "public",
+    "public": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
-    "redirects": [
+    "rewrites": [
       {
-        "source":"/",
-        "destination":"/word_statistics.html",
-        "type":302
+        "source": "**",
+        "destination": "/index.html"
       }
     ]
   }

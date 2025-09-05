@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>카드 학습 게임</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; }
+
+    body { 
+      margin:0; padding:0;
+      font-family:sans-serif;
+      background:#e0e0e0; 
+    }
+
+    nav { 
+      padding:10px; border-bottom:1px solid #ccc; background:#fff; 
+      display:flex; justify-content:center; 
+    }
+    nav a { margin-right:10px; cursor:pointer; text-decoration:underline; color:black; }
+    nav a:nth-child(2), nav a:nth-child(3), .user-menu { margin-left:15px; }
+    .user-menu { position:relative; display:inline-block; }
+    .user-dropdown { display:none; position:absolute; background:#fff; min-width:160px; 
+      box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; top:25px; right:0; border-radius:6px; }
+    .user-dropdown a { color:black; padding:12px 16px; text-decoration:none; display:block; }
+    .user-dropdown a:hover { background:#ddd; }
+    .user-menu:hover .user-dropdown { display:block; }
+
+    .page-title { text-align:center; margin:18px 0 4px; font-size:26px; font-weight:800; color:#222; }
+    #sub-title { text-align:center; margin:0 0 12px; font-size:14px; color:#666; }
+    #status-bar { text-align:center; font-size:14px; color:#555; margin:10px 0; }
+
+    .game-wrap { max-width: 860px; margin: 12px auto 24px; padding: 0 16px; }
+    .card-box { position: relative; margin: 0 auto 14px; width: 100%; max-width: 680px; 
+      min-height: 160px; background: #fff; border: 2px solid #d4d4d4; border-radius: 18px; 
+      padding: 28px; box-shadow: 0 8px 18px rgba(0,0,0,0.08); display: flex; 
+      align-items: center; justify-content: center; text-align: center; }
+    .q { font-size: 28px; font-weight: 800; color:#222; }
+
+    .answer-box { text-align:center; margin-top:12px; }
+    .answer-box input { padding:8px 12px; font-size:16px; border-radius:8px; border:1px solid #bbb; width:60%; }
+    .answer-box button { margin-left:8px; }
+
+    .controls { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px; flex-wrap:wrap; }
+    .btn { padding: 10px 14px; border-radius: 10px; border: 1px solid #bbb; background: #f7f7f7; cursor: pointer; font-size: 14px; }
+    .btn:hover { background:#ececec; }
+    .progress { text-align:center; margin-top: 8px; font-size: 13px; color:#666; }
+    .summary { text-align:center; margin-top: 18px; font-weight:700; }
+
+    .wrong-list { max-width:680px; margin:18px auto; background:#fff; border-radius:10px; padding:12px; }
+    .wrong-item { display:flex; flex-direction:column; gap:4px; padding:10px; border:1px solid #eee; border-radius:10px; margin-bottom:8px; }
+    .wrong-word { font-weight:700; }
+    .tag { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; }
+    .tag.correct { background:#e8f7e9; border:1px solid #7fd18a; }
+    .tag.chosen { background:#ffe7e7; border:1px solid #ff9a9a; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a onclick="location.href='mainpage.html'">홈</a>
+    <a onclick="location.href='study_note.html'">어휘 학습</a>
+    <a onclick="location.href='study_tools.html'">학습 도구</a>
+    <div id="authContainer"></div>
+  </nav>
+
+  <h1 class="page-title">카드 학습 게임</h1>
+  <div id="sub-title"></div>
+  <div id="status-bar"></div>
+
+  <main class="game-wrap" id="game" style="display:none;">
+    <div class="card-box">
+      <div id="q" class="q">단어를 불러오는 중…</div>
+    </div>
+
+    <div class="answer-box">
+      <input type="text" id="answerInput" placeholder="뜻을 입력하세요" />
+      <button id="submitBtn" class="btn">제출</button>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="btn-next" disabled>다음</button>
+      <button class="btn" id="btn-restart" style="display:none;">다시하기</button>
+      <button class="btn" id="btn-retry-wrong" style="display:none;">오답만 다시 풀기</button>
+      <button class="btn" id="btn-back">목록으로</button>
+    </div>
+
+    <div id="progress" class="progress"></div>
+    <div id="summary" class="summary"></div>
+    <div id="wrong-answers" class="wrong-list" style="display:none;"></div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, Timestamp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
+      authDomain: "auto-dictionary-29936.firebaseapp.com",
+      projectId: "auto-dictionary-29936",
+      storageBucket: "auto-dictionary-29936.appspot.com",
+      messagingSenderId: "103494421267",
+      appId: "1:103494421267:web:6762683fac5ac130e468e6",
+      measurementId: "G-EKSJXHHRYS"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+    const provider = new GoogleAuthProvider();
+
+    const authContainer = document.getElementById('authContainer');
+    const subTitle = document.getElementById('sub-title');
+    const statusBar = document.getElementById('status-bar');
+    const game = document.getElementById('game');
+    const qEl = document.getElementById('q');
+    const btnNext = document.getElementById('btn-next');
+    const btnRestart = document.getElementById('btn-restart');
+    const btnRetryWrong = document.getElementById('btn-retry-wrong');
+    const btnBack = document.getElementById('btn-back');
+    const progressEl = document.getElementById('progress');
+    const summaryEl = document.getElementById('summary');
+    const wrongEl = document.getElementById('wrong-answers');
+    const answerInput = document.getElementById('answerInput');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function login(){ signInWithPopup(auth, provider).catch(e=>{console.error(e); alert('로그인 중 오류');}); }
+    function logout(){ signOut(auth).catch(e=>{console.error(e); alert('로그아웃 중 오류');}); }
+    function updateAuthUI(user) {
+      authContainer.innerHTML = '';
+      if (user) {
+        const name = user.displayName ? (user.displayName.length>8 ? user.displayName.slice(0,8)+'…' : user.displayName) : (user.email || '사용자');
+        authContainer.innerHTML = `
+          <div class="user-menu">
+            <a href="javascript:void(0);" style="text-decoration:none">
+              <span class="user-label">${name}</span>
+              <img src="${user.photoURL || ''}" alt="사용자" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-left:6px;"/>
+            </a>
+            <div class="user-dropdown">
+              <a href="#">${user.email}</a>
+              <a href="statistics.html">통계</a>
+              <a href="#" id="logoutBtn">로그아웃</a>
+            </div>
+          </div>`;
+        document.getElementById('logoutBtn')?.addEventListener('click', logout);
+      } else {
+        authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
+        document.getElementById('loginBtn')?.addEventListener('click', login);
+      }
+    }
+    onAuthStateChanged(auth, (user)=>{ updateAuthUI(user); if(user) loadDeck(user); });
+
+    const params = new URLSearchParams(window.location.search);
+    const selectedDate = params.get('date');
+    if(selectedDate){ subTitle.textContent = `선택한 날짜: ${selectedDate}`; }
+    else { subTitle.textContent = '날짜 정보가 전달되지 않았습니다.'; }
+
+    function toKstDateString(v){
+      try{
+        if(!v) return null;
+        let d;
+        if(typeof v?.toDate === 'function') d = v.toDate();
+        else if(v instanceof Timestamp) d = v.toDate();
+        else if(typeof v === 'object' && 'seconds' in v && 'nanoseconds' in v){
+          d = new Date(v.seconds*1000 + Math.floor(v.nanoseconds/1e6));
+        } else if(typeof v === 'number') d = new Date(v);
+        else d = new Date(v);
+        if(isNaN(d.getTime())) return null;
+        return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+      }catch(e){ console.warn('날짜 변환 실패:', v, e); return null; }
+    }
+    const arrayOrEmpty = (v)=> Array.isArray(v) ? v : (v==null || v==='' ? [] : [String(v)]);
+
+    let deck = [];        
+    let order = [];      
+    let i = 0;            
+    let answered = false;   
+    let score = 0;     
+    let wrongList = [];   
+
+    async function loadDeck(user){
+      if(!selectedDate){ statusBar.textContent = '날짜 파라미터가 없어 목록으로 돌아갑니다.'; return; }
+      statusBar.textContent = '데이터 불러오는 중…';
+      const snap = await getDocs(query(collection(db,'users', user.email, 'searchHistory')));
+      const list = [];
+      snap.forEach(doc=>{
+        const d = doc.data();
+        const day = toKstDateString(d.searchedAt);
+        if(day !== selectedDate) return;
+        const meanings = arrayOrEmpty(d.meaning).map(x=>String(x).trim()).filter(Boolean);
+        if(!d.word || meanings.length===0) return;
+        list.push({ word: d.word, meanings });
+      });
+
+      if(list.length === 0){
+        statusBar.textContent = '해당 날짜에 학습할 단어가 없습니다.';
+        game.style.display = 'none';
+        return;
+      }
+
+      deck = list;
+      order = [...Array(deck.length).keys()];
+      shuffle(order);
+      i = 0;
+      score = 0;
+      wrongList = [];
+      game.style.display = 'block';
+      showQuestion(i);
+    }
+
+    function shuffle(a){ for(let j=a.length-1;j>0;j--){const k=Math.floor(Math.random()*(j+1)); [a[j],a[k]]=[a[k],a[j]];} }
+
+    function showQuestion(idx){
+      answered = false;
+      btnNext.disabled = true;
+      answerInput.value = '';
+      summaryEl.textContent = '';
+      qEl.textContent = deck[order[idx]].word;  // 문제: 단어 보여주고 뜻 입력
+      statusBar.textContent = `${idx+1} / ${deck.length}`;
+    }
+
+    function checkAnswer(){
+      if(answered) return;
+      answered = true;
+      const userAns = answerInput.value.trim();
+      const current = deck[order[i]];
+      const correctAnswers = current.meanings.map(m=>m.toLowerCase());
+      const isCorrect = correctAnswers.includes(userAns.toLowerCase());
+      if(isCorrect){
+        score++;
+        summaryEl.textContent = "✅ 정답입니다!";
+      }else{
+        summaryEl.textContent = `❌ 오답! 정답: ${current.meanings.join(', ')}`;
+        wrongList.push({ word: current.word, correct: current.meanings, chosen: userAns || "(미입력)" });
+      }
+      btnNext.disabled = false;
+    }
+
+    submitBtn.addEventListener('click', checkAnswer);
+    answerInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') checkAnswer(); });
+
+    btnNext.addEventListener('click', ()=>{
+      i++;
+      if(i<deck.length){
+        showQuestion(i);
+      }else{
+        finishGame();
+      }
+    });
+
+    btnRestart.addEventListener('click', ()=>{
+      order = [...Array(deck.length).keys()];
+      shuffle(order);
+      i=0; score=0; wrongList=[];
+      wrongEl.style.display='none'; btnRestart.style.display='none'; btnRetryWrong.style.display='none';
+      showQuestion(i);
+    });
+
+    btnRetryWrong.addEventListener('click', ()=>{
+      if(wrongList.length===0) return;
+      deck = wrongList.map(x=>({ word:x.word, meanings:x.correct }));
+      order = [...Array(deck.length).keys()];
+      shuffle(order);
+      i=0; score=0; wrongList=[];
+      wrongEl.style.display='none'; btnRestart.style.display='none'; btnRetryWrong.style.display='none';
+      showQuestion(i);
+    });
+
+    btnBack.addEventListener('click', ()=>{ location.href='study_note.html'; });
+
+    function finishGame(){
+      qEl.textContent = " 학습 완료";
+      summaryEl.textContent = `점수: ${score} / ${deck.length}`;
+      btnNext.style.display='none';
+      btnRestart.style.display='inline-block';
+      btnRetryWrong.style.display='inline-block';
+
+      wrongEl.innerHTML = '';
+      if(wrongList.length>0){
+        wrongEl.style.display='block';
+        wrongList.forEach(item=>{
+          const div = document.createElement('div');
+          div.className = 'wrong-item';
+          div.innerHTML = `
+            <div class="wrong-word">${item.word}</div>
+            <div><span class="tag correct">정답: ${item.correct.join(', ')}</span></div>
+            <div><span class="tag chosen">내 답: ${item.chosen}</span></div>
+          `;
+          wrongEl.appendChild(div);
+        });
+      }else{
+        wrongEl.style.display='none';
+      }
+    }
+  </script>
+</body>
+</html>

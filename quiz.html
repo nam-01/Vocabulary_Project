@@ -2,88 +2,112 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>검색 결과</title>
+  <title>어휘 학습</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      background-color: #e0e0e0;
+    * { box-sizing: border-box; }
+    body { 
+      margin:0; 
+      padding:0; 
+      font-family:sans-serif; 
+      background:#e0e0e0; 
     }
 
-    nav {
-      padding: 10px;
-      border-bottom: 1px solid #ccc;
-      background-color: #fff;
-      display: flex;
-      justify-content: center;
-    }
-    nav a {
-      margin-right: 10px;
-      cursor: pointer;
-      text-decoration: underline;
-      color: black;
-    }
-    nav a:nth-child(2),
-    nav a:nth-child(3),
-    .user-menu {
-      margin-left: 15px;
+    nav { 
+      padding:10px;
+      border-bottom:1px solid #ccc; background:#fff; 
+      display:flex; 
+      justify-content:center; 
     }
 
-    .user-menu {
-      position: relative;
-      display: inline-block;
-    }
-    .user-dropdown {
-      display: none;
-      position: absolute;
-      background-color: #fff;
-      min-width: 160px;
-      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-      z-index: 1;
-      top: 25px;
-      right: 0;
-      border-radius: 6px;
-    }
-    .user-dropdown a {
-      color: black;
-      padding: 12px 16px;
-      text-decoration: none;
-      display: block;
-    }
-    .user-dropdown a:hover {
-      background-color: #ddd;
-    }
-    .user-menu:hover .user-dropdown {
-      display: block;
+    nav a { 
+      margin-right:10px; 
+      cursor:pointer; 
+      text-decoration:underline; 
+      color:black; 
     }
 
-    section {
-      display: none;
-      margin-top: 20px;
-      padding: 20px;
-      text-align: center;
+    nav a:nth-child(2), nav a:nth-child(3), .user-menu { margin-left:15px; }
+    .user-menu { 
+      position:relative; 
+      display:inline-block; 
     }
-    section.active {
-      display: block;
+    .user-dropdown { 
+      display:none; 
+      position:absolute; 
+      background:#fff; 
+      min-width:160px; 
+      box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; 
+      top:25px; 
+      right:0; 
+      border-radius:6px; 
+    }
+    .user-dropdown a { 
+      color:black; 
+      padding:12px 16px; 
+      text-decoration:none; 
+      display:block; 
+    }
+    .user-dropdown a:hover { 
+      background:#ddd; 
+    }
+    .user-menu:hover .user-dropdown { 
+      display:block; 
     }
 
-    .center-box {
-      height: calc(100vh - 60px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      color: #444;
+    .page-title { 
+      text-align:center; 
+      margin:18px 0 12px; 
+      font-size:26px; 
+      font-weight:800; 
+      color:#222; 
+    }
+
+    .filter-bar { 
+      display:flex; 
+      justify-content:center; 
+      align-items:center; 
+      gap:10px; 
+      margin-bottom:14px; 
+      flex-wrap:wrap; 
+    }
+    select { 
+      padding:8px; 
+      font-size:14px; 
+    }
+
+    .wordbook-card { 
+      border:2px solid #ccc; 
+      border-radius:15px; 
+      padding:15px 20px; 
+      margin:10px auto;
+      max-width:600px; 
+      background:#fff; 
+      display:flex; 
+      justify-content:space-between;
+      align-items:center; 
+    }
+    .tool-btn { 
+      padding:10px 14px; 
+      border-radius:10px; 
+      border:1px solid #bbb; 
+      background:#f7f7f7; 
+      cursor:pointer; 
+      font-size:14px; 
+    }
+    .tool-btn:hover { 
+      background:#ececec; 
+    }
+
+    #status-bar { 
+      text-align:center; 
+      font-size:13px; 
+      color:#555; 
+      margin-bottom:8px; 
     }
   </style>
 </head>
 <body>
-  <!-- 네비게이션 -->
   <nav>
     <a onclick="location.href='mainpage.html'">홈</a>
     <a onclick="location.href='study_note.html'">어휘 학습</a>
@@ -91,21 +115,22 @@
     <div id="authContainer"></div>
   </nav>
 
-  <!-- 중앙 텍스트 -->
-  <div class="center-box">
-    학습 도구 페이지
-  </div>
+  <h1 class="page-title">퀴즈 페이지</h1>
 
-  <!-- Firebase 인증 및 UI 업데이트 -->
+  <section id="vocab" class="active" style="text-align:center;">
+    <div class="filter-bar">
+      <label for="month-filter">월별 필터:</label>
+      <select id="month-filter"><option value="all">기간 선택</option></select>
+    </div>
+    <div id="status-bar"></div>
+    <div id="wordbook-container"></div>
+  </section>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
-    import {
-      getAuth,
-      GoogleAuthProvider,
-      signInWithPopup,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, Timestamp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
@@ -119,55 +144,139 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
+    const db = getFirestore();
     const provider = new GoogleAuthProvider();
-    const authContainer = document.getElementById("authContainer");
 
-    function login() {
-      signInWithPopup(auth, provider)
-        .then((result) => {
-          console.log("로그인 성공:", result.user.displayName);
-        })
-        .catch((error) => {
-          console.error("로그인 실패:", error);
-        });
-    }
 
-    function logout() {
-      signOut(auth)
-        .then(() => {
-          console.log("로그아웃 완료");
-        })
-        .catch((error) => {
-          console.error("로그아웃 실패:", error);
-        });
-    }
+    const authContainer = document.getElementById('authContainer');
+    const filter = document.getElementById('month-filter');
+    const container = document.getElementById('wordbook-container');
+    const statusBar = document.getElementById('status-bar');
 
-    function updateAuthUI(user) {
+
+    function login(){ signInWithPopup(auth, provider).catch(e=>{console.error(e); alert('로그인 중 오류');}); }
+    function logout(){ signOut(auth).catch(e=>{console.error(e); alert('로그아웃 중 오류');}); }
+    function updateAuthUI(user){
       authContainer.innerHTML = '';
-      if (user) {
-        const name = user.displayName ? (user.displayName.length>8 ? user.displayName.slice(0,8)+'…' : user.displayName) : (user.email || '사용자');
+      if(user){
+        const name = user.displayName ? (user.displayName.length>8? user.displayName.slice(0,8)+'…' : user.displayName) : (user.email || '사용자');
         authContainer.innerHTML = `
-          <div class="user-menu">
-            <a href="javascript:void(0);" style="text-decoration:none">
-              <span class="user-label">${name}</span>
-              <img src="${user.photoURL || ''}" alt="사용자" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-left:6px;"/>
+          <div class=\"user-menu\">
+            <a href=\"javascript:void(0);\" style=\"text-decoration:none\">
+              <span class=\"user-label\">${name}</span>
+              <img src=\"${user.photoURL || ''}\" alt=\"사용자\" style=\"width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-left:6px;\"/>
             </a>
-            <div class="user-dropdown">
-              <a href="#">${user.email}</a>
-              <a href="statistics.html">통계</a>
-              <a href="#" id="logoutBtn">로그아웃</a>
+            <div class=\"user-dropdown\">
+              <a href=\"#\">${user.email}</a>
+              <a href=\"statistics.html\">통계</a>
+              <a href=\"#\" id=\"logoutBtn\">로그아웃</a>
             </div>
           </div>`;
         document.getElementById('logoutBtn')?.addEventListener('click', logout);
-      } else {
-        authContainer.innerHTML = `<button id="loginBtn">로그인</button>`;
+      }else{
+        authContainer.innerHTML = `<button id=\"loginBtn\">로그인</button>`;
         document.getElementById('loginBtn')?.addEventListener('click', login);
       }
     }
 
-    onAuthStateChanged(auth, (user) => {
+
+    function toKstDateString(v){
+      try{
+        if(!v) return null;
+        let d;
+        if(typeof v?.toDate === 'function') d = v.toDate();
+        else if(v instanceof Timestamp) d = v.toDate();
+        else if(typeof v === 'object' && 'seconds' in v && 'nanoseconds' in v){
+          d = new Date(v.seconds*1000 + Math.floor(v.nanoseconds/1e6));
+        } else if(typeof v === 'number') d = new Date(v);
+        else d = new Date(v);
+        if(isNaN(d.getTime())) return null;
+        return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+      }catch(e){ console.warn('날짜 변환 실패:', v, e); return null; }
+    }
+
+
+    async function fetchHistoryDocs(user){
+      const qRef = query(collection(db, 'users', user.email, 'searchHistory'));
+      const snap = await getDocs(qRef);
+      return snap;
+    }
+
+
+    let groups = []; 
+
+    function populateMonthFilter(){
+      while(filter.options.length>1) filter.remove(1);
+      const months = Array.from(new Set(groups.map(g=> g.date.slice(0,7)))).sort().reverse();
+      months.forEach(m=>{
+        const opt = document.createElement('option');
+        opt.value = m; opt.textContent = `${m}월`;
+        filter.appendChild(opt);
+      });
+    }
+
+    function getFiltered(){
+      const m = filter.value;
+
+      const base = (m==='all') ? groups : groups.filter(g=> g.date.startsWith(m));
+
+      return base.filter(g => g.count >= 5);
+    }
+
+    function renderList(list){
+      container.innerHTML = '';
+      const arr = [...list].sort((a,b)=> new Date(b.date) - new Date(a.date));
+      arr.forEach(entry=>{
+        const card = document.createElement('div');
+        card.className = 'wordbook-card';
+
+        const left = document.createElement('div');
+        const dateSpan = document.createElement('span');
+        dateSpan.textContent = `${entry.date} - ${entry.count}단어`;
+        left.appendChild(dateSpan);
+
+        const btn = document.createElement('button');
+        btn.className = 'tool-btn';
+        btn.textContent = '복습 시작';
+        btn.addEventListener('click', ()=>{ location.href = `quiz_english.html?date=${encodeURIComponent(entry.date)}`; });
+
+        card.appendChild(left);
+        card.appendChild(btn);
+        container.appendChild(card);
+      });
+    }
+
+    onAuthStateChanged(auth, async (user)=>{
       updateAuthUI(user);
+      if(!user){ container.innerHTML = '<div style="margin:20px;">로그인 후 이용해주세요.</div>'; return; }
+      try{
+        statusBar.textContent = '불러오는 중…';
+        const snap = await fetchHistoryDocs(user);
+        const map = new Map();
+        snap.forEach(doc=>{
+          const d = doc.data();
+          const date = toKstDateString(d.searchedAt);
+          if(!date) return;
+          if(!map.has(date)) map.set(date, 0);
+          map.set(date, map.get(date)+1);
+        });
+        groups = Array.from(map.entries()).map(([date,count])=>({date,count}));
+        populateMonthFilter();
+        const filtered = getFiltered();
+        renderList(filtered);
+        statusBar.textContent = filtered.length ? '' : '조건에 맞는 데이터가 없습니다.';
+      }catch(e){
+        console.error(e);
+        statusBar.textContent = '불러오기 실패';
+        container.innerHTML = `<div style=\"max-width:600px;margin:12px auto;padding:12px;background:#fff;border:1px solid #f2caca;border-radius:8px;color:#a33;\">오류: <code>${e?.message||e}</code></div>`;
+      }
     });
+
+    filter.onchange = () => {
+      const filtered = getFiltered();
+      renderList(filtered);
+      statusBar.textContent = filtered.length ? '' : '조건에 맞는 데이터가 없습니다.';
+    };
   </script>
 </body>
 </html>
