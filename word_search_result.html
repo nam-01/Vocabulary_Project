@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>검색 결과</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family:'Inter',sans-serif; background:#F7F9FC; color:#333; }
+    .container { max-width:1000px; margin:0 auto; padding:2rem 1rem; }
+    .user-menu { position:relative; display:inline-block; }
+    .user-dropdown {
+      display:none; position:absolute; right:0; top:100%; transform:translateY(-8px);
+      background:#fff; border:1px solid #ddd; border-radius:8px; margin-top:8px; min-width:160px;
+      box-shadow:0 4px 8px rgba(0,0,0,.1); z-index:100;
+    }
+    .user-dropdown a { display:block; padding:8px 12px; font-size:14px; color:#333; text-decoration:none; }
+    .user-dropdown a:hover { background:#f0f0f0; }
+    .user-menu:hover .user-dropdown { display:block; }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+  <!-- 네비게이션 -->
+  <header class="bg-white shadow-md py-4">
+    <nav class="container flex justify-between items-center">
+      <div class="flex items-center space-x-6">
+        <a href="home.html" class="text-blue-600 text-lg font-bold">홈</a>
+        <a href="word_main.html" class="text-gray-800 text-lg font-bold">단어장</a>
+        <a href="study_tools.html" class="text-gray-800 text-lg font-bold">학습 도구</a>
+        <a href="user.html" class="text-gray-800 text-lg font-bold">사용자</a>
+      </div>
+      <div id="authContainer" class="flex items-center space-x-4"></div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- 검색창 -->
+    <section class="flex flex-col sm:flex-row justify-center items-center my-8">
+      <div class="relative w-full sm:w-1/2">
+        <input id="searchInput" type="text" placeholder="단어 검색"
+               class="w-full px-6 py-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-lg">
+        <button id="searchBtn"
+                class="absolute right-0 top-0 mt-4 mr-6 text-gray-400 hover:text-blue-600 transition">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- 결과 카드 -->
+    <div class="bg-white p-6 rounded-xl shadow-lg mt-8">
+      <h2 id="wordTitle" class="text-3xl font-bold mb-4">검색어</h2>
+
+      <!-- (선택) 디버그/알림 -->
+      <pre id="resultBox" class="text-sm text-gray-500 whitespace-pre-wrap mb-4" style="display:none;"></pre>
+
+      <div class="space-y-4">
+        <div class="flex items-start space-x-2">
+          <h3 class="font-semibold text-gray-700 flex-shrink-0">뜻:</h3>
+          <p id="meaning" class="text-gray-900">-</p>
+        </div>
+        <div class="flex items-start space-x-2">
+          <h3 class="font-semibold text-gray-700 flex-shrink-0">유의어:</h3>
+          <p id="synonyms" class="text-gray-900">-</p>
+        </div>
+        <div class="flex items-start space-x-2">
+          <h3 class="font-semibold text-gray-700 flex-shrink-0">반의어:</h3>
+          <p id="antonyms" class="text-gray-900">-</p>
+        </div>
+        <div class="flex items-start space-x-2">
+          <h3 class="font-semibold text-gray-700 flex-shrink-0">예문:</h3>
+          <p id="example" class="text-gray-900">-</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Firebase + Firestore + OpenAI -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc
+    } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+
+    // --- Firebase 초기화 ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
+      authDomain: "auto-dictionary-29936.firebaseapp.com",
+      projectId: "auto-dictionary-29936",
+      storageBucket: "auto-dictionary-29936.appspot.com",
+      messagingSenderId: "103494421267",
+      appId: "1:103494421267:web:6762683fac5ac130e468e6",
+      measurementId: "G-EKSJXHHRYS"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+    const provider = new GoogleAuthProvider();
+
+    // --- 엘리먼트 ---
+    const authContainer = document.getElementById("authContainer");
+    const searchInput   = document.getElementById("searchInput");
+    const searchBtn     = document.getElementById("searchBtn");
+    const wordTitle     = document.getElementById("wordTitle");
+    const meaningEl     = document.getElementById("meaning");
+    const synonymsEl    = document.getElementById("synonyms");
+    const antonymsEl    = document.getElementById("antonyms");
+    const exampleEl     = document.getElementById("example");
+    const resultBox     = document.getElementById("resultBox");
+
+    const rowOf = (el) => el?.parentElement;
+    const cleanList = (arr, max = 5) =>
+      [...new Set((arr || []).map(x => String(x).trim()).filter(Boolean))].slice(0, max);
+    function renderField(el, listOrText) {
+      if (!el) return;
+      let has = false;
+      if (Array.isArray(listOrText)) {
+        const list = cleanList(listOrText, 999);
+        if (list.length) { el.textContent = list.join(", "); has = true; }
+      } else if (typeof listOrText === "string" && listOrText.trim()) {
+        el.textContent = listOrText.trim(); has = true;
+      }
+      const row = rowOf(el);
+      if (row) row.style.display = has ? "" : "none";
+    }
+
+    function login(){ signInWithPopup(auth, provider); }
+    function logout(){ signOut(auth); }
+    function updateAuthUI(user){
+      authContainer.innerHTML = '';
+      if(user){
+        const name = user.displayName
+          ? (user.displayName.length>5 ? user.displayName.slice(0,5)+'…' : user.displayName)
+          : (user.email||'사용자');
+        authContainer.innerHTML = `
+          <div class="user-menu">
+            <a href="javascript:void(0);" class="flex items-center space-x-2" style="min-width:120px;">
+              <span class="user-label font-semibold">${name}</span>
+              <img src="${user.photoURL||''}" alt="사용자" style="width:28px;height:28px;border-radius:50%;"/>
+            </a>
+            <div class="user-dropdown">
+              <a href="#">${user.email}</a>
+              <a href="#" id="logoutBtn">로그아웃</a>
+            </div>
+          </div>`;
+        document.getElementById('logoutBtn')?.addEventListener('click', e => { e.preventDefault(); logout(); });
+      } else {
+        authContainer.innerHTML = `<button id="loginBtn" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">로그인</button>`;
+        document.getElementById('loginBtn')?.addEventListener('click', login);
+      }
+    }
+
+    function searchWord(){
+      const q = searchInput.value.trim();
+      if(q) window.location.href = `word_search_result.html?word=${encodeURIComponent(q)}`;
+      else alert("검색어를 입력하세요!");
+    }
+    searchInput.addEventListener("keydown", e => { if(e.key==="Enter") searchWord(); });
+    searchBtn.addEventListener("click", searchWord);
+
+    onAuthStateChanged(auth, async (user) => {
+      updateAuthUI(user);
+
+      const params = new URLSearchParams(window.location.search);
+      const word = params.get("word")?.toLowerCase() || "";
+
+      if (!word) {
+        wordTitle.textContent = "검색어 없음";
+        [meaningEl, synonymsEl, antonymsEl, exampleEl].forEach(el => rowOf(el).style.display = "none");
+        resultBox.style.display = ""; resultBox.textContent = "검색어가 없습니다.";
+        return;
+      }
+      if (!/^[a-zA-Z]+$/.test(word)) {
+        wordTitle.textContent = word;
+        [meaningEl, synonymsEl, antonymsEl, exampleEl].forEach(el => rowOf(el).style.display = "none");
+        resultBox.style.display = ""; resultBox.textContent = "⚠️ 영어 단어만 검색 가능합니다.";
+        return;
+      }
+
+      wordTitle.textContent = word;
+      resultBox.style.display = "none"; // 기본 숨김
+
+      let meaning = [], synonyms = [], antonyms = [], examples = [];
+
+      try {
+        const dictRef = doc(db, "dictionary", word);
+        const dictSnap = await getDoc(dictRef);
+
+        if (dictSnap.exists()) {
+          const d = dictSnap.data();
+          meaning  = cleanList(d.korean_translations, 5);
+          synonyms = cleanList(d.synonyms, 5);
+          antonyms = cleanList(d.antonyms, 5);
+          examples = cleanList(d.examples, 1);
+        } else {
+          let parsedMeanings = [];
+          try {
+            const response = await fetch("https://api.openai.com/v1/chat/completions", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer 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"
+              },
+              body: JSON.stringify({
+                model: "gpt-4.1-nano",
+                messages: [
+                  { role: "system", content: "You are a helpful assistant. Please respond in Korean." },
+                  { role: "user", content: `${word} 의 뜻 알려줘(1. ??  형식, 앞뒤 설명없이 뜻만, 일반적으로 존재하지 않는 단어면 'X')` }
+                ]
+              })
+            });
+            const data = await response.json();
+            const rawText = data.choices?.[0]?.message?.content || "";
+
+            if (rawText.replace(/\s/g, '') === 'X') {
+              resultBox.style.display = ""; resultBox.textContent = "검색 결과 없음";
+              return;
+            }
+
+            parsedMeanings = rawText
+              .split(/\n\d+\.\s*/)                
+              .map(line => line.replace(/^\d+\.\s*/, "").trim())
+              .filter(Boolean)
+              .slice(0, 5);
+
+          } catch (e) {
+            console.error("OpenAI 호출 실패:", e);
+          }
+
+          if (!parsedMeanings.length) {
+            resultBox.style.display = ""; resultBox.textContent = "검색 결과 없음";
+            return; // 전체 종료
+          }
+
+          meaning = parsedMeanings;
+        }
+
+        const exampleText = (examples[0] || "").replace(/^["“”]+|["“”]+$/g, "").replace(/\s+/g, " ").trim();
+        renderField(meaningEl,  meaning);
+        renderField(synonymsEl, synonyms);
+        renderField(antonymsEl, antonyms);
+        renderField(exampleEl,  exampleText);
+
+if (user && meaning.length > 0) {
+  const now = new Date();
+  const dateId = now.toISOString().slice(0,10); // YYYY-MM-DD
+
+  const dateDocRef = doc(db, "users", user.email, "dates", dateId);
+  await setDoc(dateDocRef, { createdAt: now.toISOString() }, { merge: true });
+
+  const historyRef = doc(db, "users", user.email, "dates", dateId, "searchHistory", word);
+  const prev = await getDoc(historyRef);
+  const count = prev.exists() ? ((prev.data().count || 1) + 1) : 1;
+
+  await setDoc(historyRef, {
+    word,
+    meaning,
+    synonyms,
+    antonyms,
+    examples,
+    searchedAt: now.toISOString(),
+    count,
+    study: false
+  });
+}
+
+
+      } catch (err) {
+        console.error(err);
+        resultBox.style.display = ""; resultBox.textContent = "오류가 발생했습니다. 콘솔을 확인하세요.";
+        [meaningEl, synonymsEl, antonymsEl, exampleEl].forEach(el => rowOf(el).style.display = "none");
+      }
+    });
+  </script>
+</body>
+</html>
