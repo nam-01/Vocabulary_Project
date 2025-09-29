@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>십자말풀이 게임</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; background:#f9f9f9; margin:0; padding:0; }
+    nav { padding:10px; border-bottom:1px solid #ccc; background:#fff; display:flex; justify-content:center; gap:10px; align-items:center; }
+    nav a { cursor:pointer; text-decoration:underline; color:black; }
+    #authContainer { margin-left: 8px; }
+    .wrap { max-width:1200px; margin:18px auto; padding:0 16px; }
+    h1 { text-align:center; margin:12px 0; }
+    #controls { display:flex; gap:10px; align-items:center; justify-content:center; margin-bottom:12px; }
+    #wordbookList { padding:6px 8px; font-size:14px; }
+    .puzzle-container { display:flex; justify-content:center; gap:40px; margin:0 auto 24px; max-width:1200px; }
+    .grid { display:grid; grid-template-columns: repeat(15, 40px); grid-template-rows: repeat(15, 40px); gap:2px; background:#bbb; padding:5px; }
+    .cell { width:40px; height:40px; background:#fff; position:relative; box-sizing:border-box; }
+    .cell.blocked { background:#ccc; }
+    .cell input { width:100%; height:100%; border:none; text-align:center; font-size:18px; font-weight:bold; background:transparent; }
+    .cell input:focus { outline:2px solid #4caf50; }
+    .number { position:absolute; top:2px; left:4px; font-size:11px; color:#000; pointer-events:none; }
+    .clues { width:320px; max-height:650px; overflow:auto; }
+    .clues h3 { margin-top:0; }
+    .clues ul { padding-left:18px; }
+    .clues li { margin:6px 0; font-size:14px; }
+    .btn-check { display:block; margin:12px auto; padding:10px 14px; background:#4caf50; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a onclick="location.href='mainpage.html'">홈</a>
+    <a onclick="location.href='study_note.html'">어휘 학습</a>
+    <a onclick="location.href='study_tools.html'">학습 도구</a>
+    <div id="authContainer"></div>
+  </nav>
+
+  <div class="wrap">
+    <h1>십자말풀이 게임</h1>
+    <div id="controls">
+      <label for="wordbookList">단어장(날짜) 선택:</label>
+      <select id="wordbookList"><option value="">(로그인 후 단어장 불러오기)</option></select>
+      <button id="refreshBtn">새로고침</button>
+    </div>
+    <div class="puzzle-container">
+      <div id="grid" class="grid" aria-label="퍼즐 그리드"></div>
+      <div class="clues">
+        <h3>가로 문제</h3>
+        <ul id="acrossClues"></ul>
+        <h3>세로 문제</h3>
+        <ul id="downClues"></ul>
+      </div>
+    </div>
+    <button class="btn-check" id="checkBtn">정답 확인</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+
+    // ✅ Firebase 설정
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
+      authDomain: "auto-dictionary-29936.firebaseapp.com",
+      projectId: "auto-dictionary-29936",
+      storageBucket: "auto-dictionary-29936.appspot.com",
+      messagingSenderId: "103494421267",
+      appId: "1:103494421267:web:6762683fac5ac130e468e6",
+      measurementId: "G-EKSJXHHRYS"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+    const provider = new GoogleAuthProvider();
+
+    const SIZE = 15;
+    const MAX_WORDS = 30;
+
+    const gridEl = document.getElementById('grid');
+    const wordbookList = document.getElementById('wordbookList');
+    const acrossCluesEl = document.getElementById('acrossClues');
+    const downCluesEl = document.getElementById('downClues');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const checkBtn = document.getElementById('checkBtn');
+
+    let puzzleGrid = [];
+    let placedWords = [];
+    let authUser = null;
+
+    function toKstDateString(v) {
+      try {
+        if (!v) return null;
+        let d;
+        if (typeof v?.toDate === 'function') d = v.toDate();
+        else if (v && typeof v.seconds === 'number')
+          d = new Date(v.seconds * 1000 + Math.floor((v.nanoseconds||0)/1e6));
+        else d = new Date(v);
+        if (isNaN(d.getTime())) return null;
+        return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year:'numeric', month:'2-digit', day:'2-digit' }).format(d);
+      } catch (e) { return null; }
+    }
+
+    const authContainer = document.getElementById('authContainer');
+    function renderAuthUI(user) {
+      authContainer.innerHTML = '';
+      if (user) {
+        const btn = document.createElement('button');
+        btn.textContent = '로그아웃';
+        btn.onclick = async () => { await signOut(auth); };
+        authContainer.appendChild(btn);
+      } else {
+        const btn = document.createElement('button');
+        btn.textContent = '로그인';
+        btn.onclick = async () => {
+          try { await signInWithPopup(auth, provider); }
+          catch(e){ alert('로그인 실패: ' + e.message); }
+        };
+        authContainer.appendChild(btn);
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      authUser = user;
+      renderAuthUI(user);
+      if (user) await populateWordbookList(user);
+      else wordbookList.innerHTML = "<option value=''>로그인 후 단어장 불러오기</option>";
+    });
+
+    async function populateWordbookList(user) {
+      wordbookList.innerHTML = "<option value=''>불러오는 중...</option>";
+      try {
+        const snap = await getDocs(collection(db, 'users', user.email, 'searchHistory'));
+        const dateMap = new Map();
+        snap.forEach(docSnap => {
+          const d = docSnap.data();
+          const dateStr = toKstDateString(d.searchedAt);
+          if (!dateStr) return;
+          if (!dateMap.has(dateStr)) dateMap.set(dateStr, []);
+          dateMap.get(dateStr).push(d);
+        });
+        const dates = Array.from(dateMap.keys()).sort((a,b) => b.localeCompare(a));
+        wordbookList.innerHTML = "<option value=''>단어장 선택</option>";
+        dates.forEach(dt => {
+          const opt = document.createElement('option');
+          opt.value = dt;
+          opt.textContent = `${dt} (${dateMap.get(dt).length}개)`;
+          wordbookList.appendChild(opt);
+        });
+      } catch (e) {
+        wordbookList.innerHTML = "<option value=''>불러오기 실패</option>";
+      }
+    }
+
+    wordbookList.addEventListener('change', async () => {
+      if (!authUser) return alert('로그인 후 사용하세요.');
+      if (!wordbookList.value) return;
+      await loadSelectedDate(wordbookList.value);
+    });
+
+    refreshBtn.addEventListener('click', async () => {
+      if (!authUser) return alert('로그인 후 사용하세요.');
+      await populateWordbookList(authUser);
+    });
+
+    async function loadSelectedDate(selectedDate) {
+      try {
+        const snap = await getDocs(collection(db, 'users', authUser.email, 'searchHistory'));
+        const list = [];
+        snap.forEach(docSnap => {
+          const d = docSnap.data();
+          if (toKstDateString(d.searchedAt) !== selectedDate) return;
+          if (!d.word) return;
+          const meanings = Array.isArray(d.meaning) ? d.meaning : (d.meaning ? [d.meaning] : []);
+          if (meanings.length === 0) return;
+          list.push({ word: String(d.word).toUpperCase(), clue: String(meanings[0]) });
+        });
+
+        placedWords = [];
+        puzzleGrid = Array.from({length: SIZE}, () => Array.from({length: SIZE}, () => null));
+
+        let idx = 1;
+        for (const item of list.slice(0, MAX_WORDS)) {
+          if (item.word.length > SIZE) continue;
+          const placed = placeWord(item, idx);
+          if (!placed) forcePlaceWord(item, idx);
+          idx++;
+        }
+        createGrid();
+        renderClues();
+      } catch (e) {
+        alert('단어장 로딩 중 오류 발생');
+      }
+    }
+
+    function canPlace(word, row, col, dir) {
+      for (let k = 0; k < word.length; k++) {
+        const r = row + (dir === 'down' ? k : 0);
+        const c = col + (dir === 'across' ? k : 0);
+        if (r < 0 || c < 0 || r >= SIZE || c >= SIZE) return false;
+        if (puzzleGrid[r][c] && puzzleGrid[r][c].letter && puzzleGrid[r][c].letter !== word[k]) return false;
+      }
+      return true;
+    }
+
+    function applyPlacement(word, row, col, dir, num) {
+      for (let k = 0; k < word.length; k++) {
+        const r = row + (dir === 'down' ? k : 0);
+        const c = col + (dir === 'across' ? k : 0);
+        puzzleGrid[r][c] = puzzleGrid[r][c] || { letter: '', number: null };
+        puzzleGrid[r][c].letter = word[k];
+        if (k === 0 && puzzleGrid[r][c].number === null) {
+          puzzleGrid[r][c].number = num;
+        }
+      }
+    }
+
+    function placeWord(item, num) {
+      const word = item.word;
+      if (placedWords.length === 0) {
+        const row = Math.floor(SIZE / 2);
+        const startCol = Math.floor((SIZE - word.length) / 2);
+        if (canPlace(word, row, startCol, 'across')) {
+          applyPlacement(word, row, startCol, 'across', num);
+          placedWords.push({ ...item, row, col: startCol, dir: 'across', num });
+          return true;
+        }
+      }
+      for (const existing of placedWords) {
+        for (let i = 0; i < word.length; i++) {
+          for (let j = 0; j < existing.word.length; j++) {
+            if (word[i] === existing.word[j]) {
+              let row, col, dir;
+              if (existing.dir === 'across') {
+                row = existing.row - i;
+                col = existing.col + j;
+                dir = 'down';
+              } else {
+                row = existing.row + j;
+                col = existing.col - i;
+                dir = 'across';
+              }
+              if (canPlace(word, row, col, dir)) {
+                applyPlacement(word, row, col, dir, num);
+                placedWords.push({ ...item, row, col, dir, num });
+                return true;
+              }
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    function forcePlaceWord(item, num) {
+      const word = item.word;
+      let attempts = 0;
+      while (attempts < 100) {
+        const dir = Math.random() < 0.5 ? 'across' : 'down';
+        const row = Math.floor(Math.random() * SIZE);
+        const col = Math.floor(Math.random() * SIZE);
+        if (canPlace(word, row, col, dir)) {
+          applyPlacement(word, row, col, dir, num);
+          placedWords.push({ ...item, row, col, dir, num });
+          return true;
+        }
+        attempts++;
+      }
+      return false;
+    }
+
+    function createGrid() {
+      gridEl.innerHTML = '';
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          if (!puzzleGrid[r][c]) {
+            cell.classList.add('blocked');
+          } else {
+            const inp = document.createElement('input');
+            inp.maxLength = 1;
+            inp.dataset.row = r;
+            inp.dataset.col = c;
+            inp.value = '';
+            inp.addEventListener('input', (e) => {
+              e.target.value = (e.target.value || '').toUpperCase().slice(0,1);
+            });
+            cell.appendChild(inp);
+            if (puzzleGrid[r][c].number) {
+              const numDiv = document.createElement('div');
+              numDiv.className = 'number';
+              numDiv.textContent = puzzleGrid[r][c].number;
+              cell.appendChild(numDiv);
+            }
+          }
+          gridEl.appendChild(cell);
+        }
+      }
+    }
+
+    function renderClues() {
+      acrossCluesEl.innerHTML = '';
+      downCluesEl.innerHTML = '';
+      const sorted = placedWords.slice().sort((a,b) => (a.num||0) - (b.num||0));
+      sorted.forEach(w => {
+        const li = document.createElement('li');
+        li.textContent = `${w.num}. ${w.clue}`;
+        if ((w.dir || w.direction) === 'down') downCluesEl.appendChild(li);
+        else acrossCluesEl.appendChild(li);
+      });
+    }
+
+    // ✅ 정답 확인 버튼
+    checkBtn.addEventListener('click', () => {
+      document.querySelectorAll('.cell input').forEach(inp => { inp.style.background = ''; });
+
+      let correct = 0, total = 0;
+      placedWords.forEach(w => {
+        for (let k = 0; k < w.word.length; k++) {
+          const r = w.row + (w.dir === 'down' ? k : 0);
+          const c = w.col + (w.dir === 'across' ? k : 0);
+          const input = document.querySelector(`input[data-row='${r}'][data-col='${c}']`);
+          if (!input) continue;
+
+          const userAns = (input.value || '').toUpperCase();
+          const correctAns = w.word[k].toUpperCase();
+
+          if (userAns) {  // ✅ 입력된 칸만 채점
+            total++;
+            if (userAns === correctAns) {
+              input.style.background = '#c8e6c9'; // 초록
+              correct++;
+            } else {
+              input.style.background = '#ffcdd2'; // 빨강
+              input.value = correctAns; // 정답 표시
+            }
+          } else {
+            input.style.background = '#ffcdd2'; // 빈칸 빨강
+            input.value = correctAns; // 정답 자동 표시
+          }
+        }
+      });
+      alert(`정답: ${correct} / ${total} (입력한 칸만 채점됨)`);
+    });
+
+    function resetGrid() {
+      placedWords = [];
+      puzzleGrid = Array.from({length: SIZE}, () => Array.from({length: SIZE}, () => null));
+      createGrid();
+      renderClues();
+    }
+
+    resetGrid();
+  </script>
+</body>
+</html>
