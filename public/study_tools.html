@@ -115,6 +115,22 @@
       .tool-grid { grid-template-columns: 1fr; }
       .tool-card { padding: 28px 14px; }
     }
+   
+    /* 리뷰 카드를 퀴즈 밑 중앙에 고정 */
+    #card-review {
+      grid-column: 2; /* 두 번째 열 (가운데) */
+      grid-row: 2;    /* 두 번째 줄 (퀴즈 밑) */
+    }
+
+    @media (max-width: 900px) {
+      /* 화면이 좁아지면 자동 배치로 복구 */
+      #card-game {
+        grid-column: auto;
+        grid-row: auto;
+      }
+    }
+
+
   </style>
 </head>
 <body>
@@ -139,6 +155,11 @@
         <div class="tool-title">퀴즈</div>
         <div class="tool-desc">퀴즈</div>
       </div>
+      <a href="crossword_puzzle.html" class="tool-card" title="십자말풀이" style="text-decoration:none; color:inherit;">
+        <i class="fa-solid fa-th tool-icon" aria-hidden="true"></i>
+        <div class="tool-title">십자말풀이</div>
+        <div class="tool-desc">십자말풀이</div>
+      </a>
       <div class="tool-card" id="card-review" title="복습">
         <i class="fa-solid fa-rotate-right tool-icon" aria-hidden="true"></i>
         <div class="tool-title">복습</div>
