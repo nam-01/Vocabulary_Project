@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>퀴즈 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Gothic A1', sans-serif;
+            background-color: #F7F9FC;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        /* 공통 카드 스타일 */
+        .wordbook-card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .wordbook-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        .user-wordbook {
+            border-left: 5px solid #6366F1;
+        }
+        .auto-wordbook {
+            border-left: 5px solid #10B981;
+        }
+        .progress-bar-container {
+            background-color: #E5E7EB;
+            border-radius: 9999px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background-color: #6366F1;
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+        }
+        /* 퀴즈 관련 스타일 */
+        .quiz-card, .result-card {
+            background-color: #fff;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        .word-card-small {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: #333;
+            border-left: 5px solid #EF4444;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- 네비게이션 바 -->
+    <header class="bg-white shadow-md py-4">
+        <nav class="container flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <a href="#" class="text-gray-800 text-lg font-bold">홈</a>
+                <a href="#" class="text-gray-800 text-lg font-bold">단어장</a>
+                <a href="#" class="text-blue-600 text-lg font-bold">학습 도구</a>
+                <a href="#" class="text-gray-800 text-lg font-bold">사용자</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="#" class="text-gray-800 text-sm font-semibold hover:text-blue-600">로그인</a>
+                <a href="#" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">회원가입</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- 퀴즈 모드 선택 (메인 화면) -->
+        <div id="select-mode" class="flex flex-col items-center w-full transition-opacity duration-500">
+            <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">퀴즈</h1>
+            <div id="quiz-wordbook-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+                <!-- 단어장 카드들이 여기에 동적으로 추가됩니다 -->
+                <div class="text-center text-gray-500 mt-12" id="loading-message">
+                    단어장 불러오는 중...
+                </div>
+            </div>
+        </div>
+
+        <!-- 퀴즈 진행 (학습 화면) -->
+        <div id="quiz-learning" class="hidden flex-col items-center w-full max-w-lg mx-auto transition-opacity duration-500 min-h-[calc(100vh-150px)]">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6" id="quiz-title"></h1>
+            <p id="quiz-progress" class="text-gray-500 mb-8">1/14</p>
+            <div class="quiz-card p-10 w-full mb-8">
+                <p id="question-text" class="text-4xl md:text-5xl font-bold text-gray-800 break-words"></p>
+            </div>
+            <!-- 퀴즈 유형별 인터페이스 -->
+            <div id="quiz-interface" class="w-full">
+                <!-- 객관식 (기본) -->
+                <div id="multiple-choice" class="space-y-4">
+                    <button class="w-full px-6 py-4 rounded-full bg-white text-gray-800 text-lg font-semibold border border-gray-200 hover:bg-gray-100 transition answer-option"></button>
+                    <button class="w-full px-6 py-4 rounded-full bg-white text-gray-800 text-lg font-semibold border border-gray-200 hover:bg-gray-100 transition answer-option"></button>
+                    <button class="w-full px-6 py-4 rounded-full bg-white text-gray-800 text-lg font-semibold border border-gray-200 hover:bg-gray-100 transition answer-option"></button>
+                    <button class="w-full px-6 py-4 rounded-full bg-white text-gray-800 text-lg font-semibold border border-gray-200 hover:bg-gray-100 transition answer-option"></button>
+                </div>
+                <!-- 주관식 -->
+                <div id="text-input" class="hidden flex-col items-center space-y-4">
+                    <input type="text" id="answer-input" placeholder="입력하세요..." class="w-full px-6 py-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm">
+                    <button onclick="submitAnswer()" class="w-full px-6 py-4 rounded-full bg-blue-600 text-white text-lg font-bold hover:bg-blue-700 transition">
+                        제출
+                    </button>
+                    <div id="feedback-message" class="mt-4 text-center"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 퀴즈 완료 화면 -->
+        <div id="quiz-completed" class="hidden flex-col items-center w-full transition-opacity duration-500 min-h-[calc(100vh-150px)]">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6" id="completed-quiz-title"></h1>
+            <p id="completed-progress" class="text-gray-500 mb-8"></p>
+            <div class="quiz-card p-10 w-full mb-8">
+                <p class="text-4xl md:text-5xl font-bold text-gray-800">학습 완료</p>
+            </div>
+            <div class="flex flex-col space-y-4 w-full">
+                <button onclick="restartQuiz()" class="w-full px-6 py-4 rounded-full bg-blue-600 text-white text-lg font-bold hover:bg-blue-700 transition">다시 하기</button>
+                <a href="study_tools.html" class="w-full text-center px-6 py-4 rounded-full bg-gray-200 text-gray-800 text-lg font-semibold hover:bg-gray-300 transition">목록으로</a>
+            </div>
+            <div id="incorrect-words-section" class="mt-12 w-full">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">틀린 단어</h2>
+                <div id="incorrect-words-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 오답 단어가 여기에 동적으로 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, getDocs, onSnapshot, addDoc, serverTimestamp, doc, where, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase 변수
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        let db;
+        let auth;
+        let userId;
+
+        // UI 요소 참조
+        const selectModeScreen = document.getElementById('select-mode');
+        const quizLearningScreen = document.getElementById('quiz-learning');
+        const quizCompletedScreen = document.getElementById('quiz-completed');
+        const quizTitle = document.getElementById('quiz-title');
+        const quizProgress = document.getElementById('quiz-progress');
+        const questionText = document.getElementById('question-text');
+        const multipleChoiceInterface = document.getElementById('multiple-choice');
+        const textInputInterface = document.getElementById('text-input');
+        const answerInput = document.getElementById('answer-input');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const incorrectWordsList = document.getElementById('incorrect-words-list');
+        const quizWordbookList = document.getElementById('quiz-wordbook-list');
+        const completedQuizTitle = document.getElementById('completed-quiz-title');
+        const completedProgress = document.getElementById('completed-progress');
+        const loadingMessage = document.getElementById('loading-message');
+
+        // 샘플 퀴즈 데이터
+        const quizData = [
+            { word: "refuse", meaning: "거절하다" },
+            { word: "increase", meaning: "증가하다" },
+            { word: "development", meaning: "발전" },
+            { word: "essential", meaning: "필수적인" },
+            { word: "maintain", meaning: "유지하다" },
+            { word: "analysis", meaning: "분석" }
+        ];
+
+        let currentQuestionIndex = 0;
+        let incorrectWords = [];
+        let selectedWordbookTitle = '';
+        let currentQuizWords = [];
+
+        // Firebase 초기화 및 인증
+        async function initFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser?.uid || 'anonymous';
+                console.log("Firebase initialized and user authenticated. User ID:", userId);
+
+                // 오답 단어장 실시간 리스너
+                const q = query(collection(db, `/artifacts/${appId}/users/${userId}/incorrect_words`));
+                onSnapshot(q, (snapshot) => {
+                    const incorrectWordData = snapshot.docs.map(doc => doc.data());
+                    renderWordbookList(incorrectWordData);
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                loadingMessage.textContent = "데이터를 불러오는 데 실패했습니다.";
+            }
+        }
+
+        // 단어장 목록 렌더링
+        function renderWordbookList(incorrectWordData) {
+            loadingMessage.classList.add('hidden');
+            quizWordbookList.innerHTML = '';
+
+            const wordbooksToRender = [
+                {
+                    id: 'quiz-set-1',
+                    title: '2025년 7월 10일 단어장',
+                    totalWords: quizData.length,
+                    completedWords: 0,
+                    lastStudied: '2025.09.25',
+                    type: 'user',
+                    words: quizData
+                },
+                {
+                    id: 'incorrect-words',
+                    title: '오답 단어장',
+                    totalWords: incorrectWordData.length,
+                    completedWords: 0,
+                    lastStudied: '2025.09.25',
+                    type: 'auto',
+                    words: incorrectWordData
+                }
+            ];
+
+            wordbooksToRender.forEach(wordbook => {
+                const card = document.createElement('div');
+                card.className = `wordbook-card ${wordbook.type === 'user' ? 'user-wordbook' : 'auto-wordbook'}`;
+                card.dataset.wordbookId = wordbook.id;
+                card.onclick = () => startQuiz(wordbook);
+                
+                const percentage = wordbook.totalWords > 0 ? Math.round((wordbook.completedWords / wordbook.totalWords) * 100) : 0;
+                const barColor = wordbook.type === 'user' ? '#6366F1' : '#10B981';
+
+                card.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <i class="fa-solid ${wordbook.type === 'user' ? 'fa-user' : 'fa-robot'} text-xl mr-3" style="color:${barColor};"></i>
+                        <h3 class="text-xl font-bold text-gray-800">${wordbook.title}</h3>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-1">최근 학습일: ${wordbook.lastStudied}</p>
+                    <p class="text-gray-600 mb-4">총 ${wordbook.totalWords}개 단어 · ${wordbook.completedWords}개 완료</p>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: ${percentage}%; background-color:${barColor};"></div>
+                    </div>
+                    <p class="text-right text-sm text-gray-500 mt-2">${percentage}% 완료</p>
+                `;
+                quizWordbookList.appendChild(card);
+            });
+        }
+
+        // 퀴즈 시작
+        function startQuiz(wordbook) {
+            if (wordbook.words.length === 0) {
+                // 추후에 모달로 변경 필요
+                alert("선택한 단어장에 퀴즈가 없습니다.");
+                return;
+            }
+
+            selectedWordbookTitle = wordbook.title;
+            currentQuizWords = shuffleArray([...wordbook.words]);
+            
+            currentQuestionIndex = 0;
+            incorrectWords = [];
+            
+            selectModeScreen.classList.add('hidden');
+            quizLearningScreen.classList.remove('hidden');
+            
+            showQuestion();
+        }
+
+        // 문제 표시
+        async function showQuestion() {
+            if (currentQuestionIndex >= currentQuizWords.length) {
+                showCompletionScreen();
+                return;
+            }
+
+            const currentQuestion = currentQuizWords[currentQuestionIndex];
+            quizTitle.textContent = selectedWordbookTitle;
+            quizProgress.textContent = `${currentQuestionIndex + 1}/${currentQuizWords.length}`;
+            
+            const isMultipleChoice = Math.random() < 0.5; // 50% 확률로 객관식/주관식 결정
+            
+            if (isMultipleChoice) {
+                // 객관식: 뜻을 문제로, 단어를 선택지로
+                multipleChoiceInterface.classList.remove('hidden');
+                textInputInterface.classList.add('hidden');
+                
+                // 정답(currentQuestion.word)을 포함한 4개의 선택지 생성
+                const allWords = quizData.map(d => d.word);
+                const otherOptions = shuffleArray(allWords.filter(word => word !== currentQuestion.word)).slice(0, 3);
+                const options = shuffleArray([currentQuestion.word, ...otherOptions]);
+
+                questionText.textContent = currentQuestion.meaning;
+                
+                const buttons = document.querySelectorAll('.answer-option');
+                buttons.forEach((button, index) => {
+                    button.textContent = options[index];
+                    button.onclick = () => checkAnswer(button.textContent, currentQuestion.word);
+                    button.classList.remove('border-green-500', 'border-red-500');
+                    button.classList.add('border-gray-200');
+                });
+            } else {
+                // 주관식: 단어를 문제로, 뜻을 입력
+                multipleChoiceInterface.classList.add('hidden');
+                textInputInterface.classList.remove('hidden');
+                questionText.textContent = currentQuestion.word;
+                answerInput.value = '';
+                feedbackMessage.textContent = '';
+            }
+        }
+        
+        function checkAnswer(userAnswer, correctAnswer) {
+            const currentQuestion = currentQuizWords[currentQuestionIndex];
+            const isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+            
+            if (isCorrect) {
+                const button = Array.from(document.querySelectorAll('.answer-option')).find(btn => btn.textContent.toLowerCase() === correctAnswer.toLowerCase());
+                if (button) button.classList.add('border-green-500');
+            } else {
+                const button = Array.from(document.querySelectorAll('.answer-option')).find(btn => btn.textContent.toLowerCase() === userAnswer.toLowerCase());
+                if (button) button.classList.add('border-red-500');
+                const correctButton = Array.from(document.querySelectorAll('.answer-option')).find(btn => btn.textContent.toLowerCase() === correctAnswer.toLowerCase());
+                if (correctButton) correctButton.classList.add('border-green-500');
+                addIncorrectWordToFirestore(currentQuestion);
+                incorrectWords.push(currentQuestion);
+            }
+            
+            setTimeout(() => {
+                nextQuestion();
+            }, 1000);
+        }
+
+        function submitAnswer() {
+            const currentQuestion = currentQuizWords[currentQuestionIndex];
+            const userAnswer = answerInput.value.trim();
+            const isCorrect = userAnswer.toLowerCase() === currentQuestion.meaning.toLowerCase();
+            
+            if (isCorrect) {
+                feedbackMessage.textContent = "정답!";
+                feedbackMessage.classList.add('text-green-600');
+            } else {
+                feedbackMessage.textContent = `오답! 정답은 '${currentQuestion.meaning}'입니다.`;
+                feedbackMessage.classList.add('text-red-600');
+                addIncorrectWordToFirestore(currentQuestion);
+                incorrectWords.push(currentQuestion);
+            }
+            
+            setTimeout(() => {
+                nextQuestion();
+            }, 1500);
+        }
+
+        // Firestore에 틀린 단어 추가
+        async function addIncorrectWordToFirestore(wordData) {
+            try {
+                const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/incorrect_words`), {
+                    ...wordData,
+                    timestamp: serverTimestamp()
+                });
+                console.log("Document written with ID: ", docRef.id);
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+        }
+        
+        function nextQuestion() {
+            currentQuestionIndex++;
+            showQuestion();
+        }
+
+        function showCompletionScreen() {
+            quizLearningScreen.classList.add('hidden');
+            quizCompletedScreen.classList.remove('hidden');
+            completedQuizTitle.textContent = selectedWordbookTitle;
+            completedProgress.textContent = `${currentQuizWords.length}/${currentQuizWords.length}`;
+            renderIncorrectWords();
+        }
+        
+        function renderIncorrectWords() {
+            incorrectWordsList.innerHTML = '';
+            if (incorrectWords.length === 0) {
+                incorrectWordsList.innerHTML = `<p class="text-center text-gray-500">틀린 단어가 없어요! 대단해요!</p>`;
+                return;
+            }
+            
+            incorrectWords.forEach(wordData => {
+                const card = document.createElement('div');
+                card.className = 'word-card-small';
+                card.innerHTML = `
+                    <h3 class="text-xl font-bold mb-2">${wordData.word}</h3>
+                    <p class="text-gray-600">뜻: ${wordData.meaning}</p>
+                `;
+                incorrectWordsList.appendChild(card);
+            });
+        }
+
+        function restartQuiz() {
+            selectModeScreen.classList.remove('hidden');
+            quizCompletedScreen.classList.add('hidden');
+            renderWordbookList([]); // Re-render with fresh data from onSnapshot
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 페이지 로드 시 초기 렌더링
+        window.onload = initFirebase;
+    </script>
+</body>
+</html>

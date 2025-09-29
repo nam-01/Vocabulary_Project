@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학습 도구</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Gothic A1', sans-serif;
+            background-color: #F7F9FC;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .tool-card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            text-align: center;
+        }
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 네비게이션 바 -->
+    <header class="bg-white shadow-md py-4">
+        <nav class="container flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <a href="home.html" class="text-gray-800 text-lg font-bold">홈</a>
+                <a href="word_list_main.html" class="text-gray-800 text-lg font-bold">단어장</a>
+                <a href="#" class="text-blue-600 text-lg font-bold">학습 도구</a>
+                <a href="user.html" class="text-gray-800 text-lg font-bold">사용자</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="#" class="text-gray-800 text-sm font-semibold hover:text-blue-600">로그인</a>
+                <a href="#" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">회원가입</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">학습 도구</h1>
+        <p class="text-center text-gray-600 mb-12">나에게 맞는 학습 도구를 선택해 보세요.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- 플래시카드 카드 -->
+            <a href="flashcard.html" class="tool-card flex flex-col items-center">
+                <div class="p-6 rounded-full bg-blue-100 mb-4">
+                    <i class="fa-solid fa-clone text-3xl text-blue-600"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2">플래시카드</h2>
+                <p class="text-gray-600">단어와 뜻을 연결하며 학습합니다</p>
+            </a>
+
+            <!-- 퀴즈 카드 -->
+            <a href="quiz.html" class="tool-card flex flex-col items-center">
+                <div class="p-6 rounded-full bg-green-100 mb-4">
+                    <i class="fa-solid fa-spell-check text-3xl text-green-600"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2">퀴즈</h2>
+                <p class="text-gray-600">다양한 유형의 퀴즈로 실력을 점검합니다</p>
+            </a>
+
+            <!-- 십자말풀이 카드 -->
+            <a href="#" class="tool-card flex flex-col items-center">
+                <div class="p-6 rounded-full bg-yellow-100 mb-4">
+                    <i class="fa-solid fa-border-all text-3xl text-yellow-600"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2">십자말풀이</h2>
+                <p class="text-gray-600">재미있게 단어를 복습합니다</p>
+            </a>
+        </div>
+    </main>
+</body>
+</html>

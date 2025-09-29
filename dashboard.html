@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Gothic A1', sans-serif;
+            background-color: #F7F9FC;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .wordbook-card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            color: #fff;
+        }
+        .wordbook-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        .progress-bar-container {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 9999px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background-color: #fff;
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+        }
+        .calendar-container {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .calendar-day-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .calendar-day {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            padding: 0.5rem 0;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 500;
+        }
+        .calendar-day.studied {
+            background-color: #F3F4F6;
+            color: #3B82F6;
+            font-weight: 700;
+        }
+        .stat-card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        /* 목표 설정 모달 스타일 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- 네비게이션 바 -->
+    <header class="bg-white shadow-md py-4">
+        <nav class="container flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <a href="#" class="text-gray-800 text-lg font-bold">홈</a>
+                <a href="#" class="text-gray-800 text-lg font-bold">단어장</a>
+                <a href="#" class="text-gray-800 text-lg font-bold">학습 도구</a>
+                <a href="#" class="text-blue-600 text-lg font-bold">사용자</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="#" class="text-gray-800 text-sm font-semibold hover:text-blue-600">로그인</a>
+                <a href="#" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">회원가입</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 좌측 대시보드 -->
+            <div class="lg:col-span-2">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold text-gray-900">My Vocabulary</h1>
+                    <a href="word_main.html" class="text-gray-500 font-semibold hover:underline">전체 보기</a>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 샘플 단어장 카드 -->
+                    <div class="wordbook-card bg-blue-500">
+                        <div class="flex items-start justify-between">
+                            <h3 class="text-xl font-bold mb-2">2025년 7월 10일</h3>
+                            <i class="fas fa-edit text-xl text-white opacity-70 hover:opacity-100 transition"></i>
+                        </div>
+                        <p class="text-sm opacity-90 mb-4">단어: 25개 · 75%</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: 75%;"></div>
+                        </div>
+                    </div>
+                    <div class="wordbook-card bg-orange-500">
+                        <div class="flex items-start justify-between">
+                            <h3 class="text-xl font-bold mb-2">2025년 9월 15일</h3>
+                            <i class="fas fa-edit text-xl text-white opacity-70 hover:opacity-100 transition"></i>
+                        </div>
+                        <p class="text-sm opacity-90 mb-4">단어: 20개 · 50%</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: 50%;"></div>
+                        </div>
+                    </div>
+                    <div class="wordbook-card bg-yellow-500">
+                        <div class="flex items-start justify-between">
+                            <h3 class="text-xl font-bold mb-2">오답 단어장</h3>
+                            <i class="fas fa-edit text-xl text-white opacity-70 hover:opacity-100 transition"></i>
+                        </div>
+                        <p class="text-sm opacity-90 mb-4">단어: 25개 · 75%</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: 75%;"></div>
+                        </div>
+                    </div>
+                    <div class="wordbook-card bg-green-500">
+                        <div class="flex items-start justify-between">
+                            <h3 class="text-xl font-bold mb-2">내가 만든 단어장</h3>
+                            <i class="fas fa-edit text-xl text-white opacity-70 hover:opacity-100 transition"></i>
+                        </div>
+                        <p class="text-sm opacity-90 mb-4">단어: 30개 · 25%</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: 25%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 최근 학습 섹션 -->
+                <div class="mt-8 p-6 bg-white rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">최근 학습</h2>
+                    <div class="space-y-4">
+                        <!-- 퀴즈 - 오답 단어장 -->
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-gray-200">
+                                 <i class="fas fa-pen-nib text-xl text-gray-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold">퀴즈 - 오답 단어장</p>
+                                <p class="text-sm text-gray-500">2025년 9월 10일</p>
+                            </div>
+                        </div>
+                        <!-- 플래시카드 - 2025년 9월 15일 단어장 -->
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-gray-200">
+                                 <i class="fas fa-clone text-xl text-gray-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold">플래시카드 - 2025년 9월 15일 단어장</p>
+                                <p class="text-sm text-gray-500">2025년 9월 12일</p>
+                            </div>
+                        </div>
+                        <!-- 퀴즈 - 내가 만든 단어장 -->
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-gray-200">
+                                 <i class="fas fa-pen-nib text-xl text-gray-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold">퀴즈 - 내가 만든 단어장</p>
+                                <p class="text-sm text-gray-500">2025년 9월 8일</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 새로운 통계 섹션 -->
+                <div class="mt-8 p-6 bg-white rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">학습 통계</h2>
+                    
+                    <!-- 기간 선택 탭 -->
+                    <div class="flex space-x-2 mb-4">
+                        <button onclick="updateStats('1주일')" class="px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-gray-200 bg-blue-600 text-white" id="tab-1주일">1주일</button>
+                        <button onclick="updateStats('1개월')" class="px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-gray-200 bg-gray-200 text-gray-800" id="tab-1개월">1개월</button>
+                        <button onclick="updateStats('2개월')" class="px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-gray-200 bg-gray-200 text-gray-800" id="tab-2개월">2개월</button>
+                        <button onclick="updateStats('6개월')" class="px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-gray-200 bg-gray-200 text-gray-800" id="tab-6개월">6개월</button>
+                        <button onclick="updateStats('1년')" class="px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-gray-200 bg-gray-200 text-gray-800" id="tab-1년">1년</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- 가장 많이 검색한 단어 -->
+                        <div class="stat-card">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">가장 많이 검색한 단어</h3>
+                            <ul id="most-searched-words" class="space-y-3">
+                                <!-- 여기에 검색된 단어가 동적으로 표시됩니다 -->
+                            </ul>
+                        </div>
+                        <!-- 가장 많이 틀린 단어 -->
+                        <div class="stat-card">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">가장 많이 틀린 단어</h3>
+                            <ul id="most-incorrect-words" class="space-y-3">
+                                <!-- 여기에 틀린 단어가 동적으로 표시됩니다 -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 우측 캘린더 -->
+            <div class="lg:col-span-1">
+                <!-- 목표 설정 섹션 -->
+                <div class="mt-4 p-4 bg-white rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl font-bold mb-2" id="goal-status">이번 달 목표를 설정해보세요!</h3>
+                    <button onclick="showGoalModal()" class="px-4 py-2 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
+                        목표 설정
+                    </button>
+                </div>
+                <!-- 격려 메시지 섹션 -->
+                <div id="encouragement-message" class="mt-4 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-800 rounded-lg">
+                    <!-- 메시지가 여기에 표시됩니다. -->
+                </div>
+                <div class="calendar-container mt-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <button onclick="changeMonth(-1)" class="text-gray-500 hover:text-gray-800 transition"><i class="fas fa-chevron-left"></i></button>
+                        <h2 id="calendar-title" class="text-xl font-bold"></h2>
+                        <button onclick="changeMonth(1)" class="text-gray-500 hover:text-gray-800 transition"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center text-sm font-semibold text-gray-500 mb-2">
+                        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                    </div>
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-sm text-gray-800">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 목표 설정 모달 -->
+    <div id="goalModal" class="modal-overlay hidden">
+        <div class="modal-content text-center">
+            <h3 class="text-xl font-bold mb-4">이번 달 학습 목표</h3>
+            <p class="text-sm text-gray-600 mb-4">이번 달에 학습할 단어 수를 입력해주세요.</p>
+            <input type="number" id="goalInput" class="w-full p-3 rounded-lg border border-gray-300 mb-4 text-center text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="flex justify-center space-x-4">
+                <button onclick="closeGoalModal()" class="px-6 py-2 rounded-full bg-gray-200 text-gray-800 font-semibold hover:bg-gray-300 transition">취소</button>
+                <button onclick="saveGoal()" class="px-6 py-2 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">설정 완료</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 샘플 데이터: 학습한 날짜
+        const studiedDates = [
+            '2025-09-01', '2025-09-03', '2025-09-07',
+            '2025-09-10', '2025-09-12', '2025-09-15',
+            '2025-09-18', '2025-09-22', '2025-09-24', '2025-09-25'
+        ];
+        
+        // 새로운 샘플 데이터: 검색 및 오답 단어
+        const allWords = {
+            searched: [
+                { word: 'increase', count: 12, date: '2025-09-24' },
+                { word: 'vocabulary', count: 10, date: '2025-09-23' },
+                { word: 'algorithm', count: 8, date: '2025-09-20' },
+                { word: 'design', count: 5, date: '2025-09-15' },
+                { word: 'development', count: 7, date: '2025-08-30' },
+                { word: 'function', count: 15, date: '2025-08-25' },
+                { word: 'project', count: 9, date: '2025-07-10' },
+                { word: 'data', count: 11, date: '2025-06-05' },
+                { word: 'react', count: 6, date: '2025-05-20' },
+                { word: 'coding', count: 4, date: '2025-04-15' },
+            ],
+            incorrect: [
+                { word: 'refuse', count: 5, date: '2025-09-24' },
+                { word: 'diminish', count: 4, date: '2025-09-22' },
+                { word: 'forfeit', count: 3, date: '2025-09-18' },
+                { word: 'acquire', count: 2, date: '2025-08-10' },
+                { word: 'paradigm', count: 6, date: '2025-07-01' },
+                { word: 'metaphor', count: 1, date: '2025-06-25' },
+            ]
+        };
+
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let learningGoal = 0; // 학습 목표를 저장하는 변수
+        
+        const calendarTitle = document.getElementById('calendar-title');
+        const calendarGrid = document.getElementById('calendar-grid');
+        const mostSearchedWordsList = document.getElementById('most-searched-words');
+        const mostIncorrectWordsList = document.getElementById('most-incorrect-words');
+        const goalModal = document.getElementById('goalModal');
+        const goalInput = document.getElementById('goalInput');
+        const goalStatus = document.getElementById('goal-status');
+        const encouragementMessage = document.getElementById('encouragement-message');
+
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"];
+
+        function renderCalendar() {
+            calendarGrid.innerHTML = '';
+            calendarTitle.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            
+            const currentMonthStudiedCount = studiedDates.filter(date => {
+                const studiedDate = new Date(date);
+                return studiedDate.getMonth() === currentMonth && studiedDate.getFullYear() === currentYear;
+            }).length;
+
+            for (let i = 0; i < firstDay; i++) {
+                const dayElement = document.createElement('span');
+                dayElement.className = 'calendar-day-container';
+                const dayNumber = document.createElement('span');
+                dayNumber.className = 'calendar-day text-gray-400';
+                dayElement.appendChild(dayNumber);
+                calendarGrid.appendChild(dayElement);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayElement = document.createElement('span');
+                dayElement.className = 'calendar-day-container';
+                const dayNumber = document.createElement('span');
+                dayNumber.className = 'calendar-day';
+                if (studiedDates.includes(dateString)) {
+                    dayNumber.classList.add('studied');
+                }
+                dayNumber.textContent = day;
+                dayElement.appendChild(dayNumber);
+                calendarGrid.appendChild(dayElement);
+            }
+            updateCalendarInfo(currentMonthStudiedCount);
+        }
+
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        // 캘린더 정보 및 메시지를 업데이트하는 함수
+        function updateCalendarInfo(count) {
+            if (learningGoal > 0) {
+                const progress = Math.min(Math.round((count / learningGoal) * 100), 100);
+                goalStatus.textContent = `이번 달 목표: ${learningGoal}일 중 ${count}일 학습 (${progress}%)`;
+
+                if (count >= learningGoal) {
+                    encouragementMessage.textContent = "목표 달성! 정말 대단해요! 🎉";
+                } else if (progress >= 75) {
+                    encouragementMessage.textContent = "목표가 눈앞에 있어요! 조금만 더 힘내세요!";
+                } else if (progress >= 50) {
+                    encouragementMessage.textContent = "절반 이상 달성! 아주 잘하고 있어요!";
+                } else if (progress > 0) {
+                    encouragementMessage.textContent = "오늘도 새로운 단어를 배웠군요! 시작이 좋아요!";
+                } else {
+                    encouragementMessage.textContent = "아직 이번 달 학습 기록이 없어요. 오늘부터 시작해 볼까요?";
+                }
+            } else {
+                goalStatus.textContent = "이번 달 목표를 설정해보세요!";
+                if (count > 0) {
+                     encouragementMessage.textContent = `벌써 ${count}일이나 학습했어요! 목표를 정해볼까요?`;
+                } else {
+                     encouragementMessage.textContent = "아직 이번 달 학습 기록이 없어요. 오늘부터 시작해 볼까요?";
+                }
+            }
+        }
+
+        // 목표 설정 모달 관련 함수
+        function showGoalModal() {
+            goalModal.classList.remove('hidden');
+            goalInput.value = learningGoal > 0 ? learningGoal : '';
+        }
+
+        function closeGoalModal() {
+            goalModal.classList.add('hidden');
+        }
+
+        function saveGoal() {
+            const newGoal = parseInt(goalInput.value, 10);
+            if (!isNaN(newGoal) && newGoal > 0) {
+                learningGoal = newGoal;
+            }
+            closeGoalModal();
+            renderCalendar(); // 목표 저장 후 캘린더 및 메시지 업데이트
+        }
+        
+        // 통계 데이터를 필터링하고 렌더링하는 함수
+        function updateStats(period) {
+            // 모든 탭 버튼의 스타일 초기화
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-800');
+            });
+            // 선택된 탭 버튼 스타일 적용
+            document.getElementById(`tab-${period}`).classList.remove('bg-gray-200', 'text-gray-800');
+            document.getElementById(`tab-${period}`).classList.add('bg-blue-600', 'text-white');
+
+            let daysAgo;
+            switch (period) {
+                case '1주일': daysAgo = 7; break;
+                case '1개월': daysAgo = 30; break;
+                case '2개월': daysAgo = 60; break;
+                case '6개월': daysAgo = 180; break;
+                case '1년': daysAgo = 365; break;
+                default: daysAgo = 7;
+            }
+
+            const now = new Date();
+            const cutoffDate = new Date(now.setDate(now.getDate() - daysAgo));
+
+            // 데이터 필터링
+            const filteredSearched = allWords.searched.filter(word => new Date(word.date) > cutoffDate);
+            const filteredIncorrect = allWords.incorrect.filter(word => new Date(word.date) > cutoffDate);
+
+            // UI 업데이트
+            renderWordList(filteredSearched, mostSearchedWordsList);
+            renderWordList(filteredIncorrect, mostIncorrectWordsList);
+        }
+
+        // 단어 목록을 동적으로 렌더링하는 함수
+        function renderWordList(words, container) {
+            container.innerHTML = '';
+            if (words.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-center">데이터가 없습니다.</p>`;
+                return;
+            }
+
+            // count 기준으로 정렬
+            words.sort((a, b) => b.count - a.count);
+
+            words.forEach(word => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center p-3 bg-gray-100 rounded-lg';
+                li.innerHTML = `
+                    <span class="font-semibold text-gray-800">${word.word}</span>
+                    <span class="text-sm text-gray-600">${word.count}회</span>
+                `;
+                container.appendChild(li);
+            });
+        }
+
+        window.onload = () => {
+            renderCalendar();
+            updateStats('1주일'); // 페이지 로드 시 기본값으로 1주일 통계 표시
+        };
+    </script>
+</body>
+</html>
