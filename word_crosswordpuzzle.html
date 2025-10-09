@@ -39,8 +39,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: background 0.1s; /* 채점 애니메이션 추가 */
         }
-        .cell.blocked { background: #E5E7EB; }
+        .cell.blocked { 
+            background: #E5E7EB; 
+            cursor: default;
+        }
         .cell input {
             width: 100%;
             height: 100%;
@@ -64,52 +68,52 @@
             pointer-events: none;
             line-height: 1;
         }
-
+        
+        /* ------------------ 유저 드롭다운 ------------------ */
         .user-menu {
-  position: relative;
-  display: inline-block;
-}
-.user-dropdown {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: 100%;
-  transform: translateY(8px);
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  min-width: 160px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, .1);
-  z-index: 100;
-}
-.user-dropdown a {
-  display: block;
-  padding: 8px 12px;
-  font-size: 14px;
-  color: #333;
-  text-decoration: none;
-}
-.user-dropdown a:hover {
-  background: #f0f0f0;
-}
-.user-menu:hover .user-dropdown {
-  display: block;
-}
+            position: relative;
+            display: inline-block;
+        }
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            transform: translateY(8px);
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            min-width: 160px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, .1);
+            z-index: 100;
+        }
+        .user-dropdown a {
+            display: block;
+            padding: 8px 12px;
+            font-size: 14px;
+            color: #333;
+            text-decoration: none;
+        }
+        .user-dropdown a:hover {
+            background: #f0f0f0;
+        }
+        .user-menu:hover .user-dropdown {
+            display: block;
+        }
 
 
-        /* ------------------ 단어장 카드 스타일 ------------------ */
-        .wordbook-card {
-            background:#fff;
-            border-radius: 12px;
-            padding: 1.25rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            transition: transform .2s, box-shadow .2s;
-            cursor: pointer;
+        /* --- 단어장 카드(간단) (플래시카드 스타일 통합) --- */
+        .wordbook-card{
+            background:#fff; border-radius:12px; padding:1.25rem;
+            box-shadow:0 4px 6px rgba(0,0,0,0.05);
+            transition:transform .2s, box-shadow .2s; cursor:pointer;
         }
-        .wordbook-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        .wordbook-card:hover{ 
+            transform:translateY(-4px); 
+            box-shadow:0 10px 15px rgba(0,0,0,0.1); 
         }
+        
+
         .wordbook-title {
             display: flex;
             align-items: center;
@@ -150,7 +154,6 @@
 </head>
 <body>
 
-    <!-- 🧭 헤더 -->
     <header class="bg-white shadow-md py-4">
         <nav class="container flex justify-between items-center">
             <div class="flex items-center space-x-6">
@@ -164,7 +167,6 @@
     </header>
 
     <main class="container">
-        <!-- 📜 단어장 목록 섹션 -->
         <section id="crossword-list-section">
             <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">십자말풀이 게임</h1>
             <div id="wordbook-list-container" 
@@ -172,7 +174,6 @@
             </div>
         </section>
 
-        <!-- 🧩 십자말풀이 섹션 -->
         <section id="crossword-study-section" class="hidden">
             <div class="flex justify-between items-center max-w-2xl mx-auto mb-6">
                 <a href="word_crosswordpuzzle.html" onclick="showCrosswordList(); return false;" class="text-gray-500 hover:text-blue-600 transition">
@@ -200,20 +201,19 @@
         </section>
     </main>
 
-    <!-- 🧠 스크립트 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
 
+        /* ---------- Firebase Config & Init ---------- */
         const firebaseConfig = {
             apiKey: "AIzaSyBXc7qF3lz2dbWOu1O3ftSNu8dye1RLk3E",
             authDomain: "auto-dictionary-29936.firebaseapp.com",
             projectId: "auto-dictionary-29936",
             storageBucket: "auto-dictionary-29936.appspot.com",
             messagingSenderId: "103494421267",
-            appId: "1:103494421267:web:6762683fac5ac130e468e6",
-            measurementId: "G-EKSJXHHRYS"
+            appId: "1:103494421267:web:6762683fac5ac130e468e6"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -221,6 +221,7 @@
         const db = getFirestore();
         const provider = new GoogleAuthProvider();
 
+        /* ---------- Constants & DOM Elements ---------- */
         const SIZE = 15;
         const MAX_WORDS = 30;
         const crosswordListSection = document.getElementById('crossword-list-section');
@@ -234,57 +235,70 @@
         const refreshBtn = document.getElementById('refreshBtn');
         const checkBtn = document.getElementById('checkBtn');
 
+        /* ---------- State Variables ---------- */
         let puzzleGrid = [];
         let placedWords = [];
         let authUser = null;
-        let allWordbooksData = {};
+        let cleanedEmail = null; // 클리닝된 이메일 ID 저장
+        let allWordbooksData = {}; // { id: { words: [...], progress: 0, totalCells: 0, correctCells: 0 } }
         let currentWordbookId = null;
 
+        /* ---------- Utilities (플래시카드 코드 통합) ---------- */
+        const cleanEmailForDocId = email => email.replace(/\./g, '_dot_'); // 💡 이메일 클리닝 함수
+        const toArr = v => Array.isArray(v) ? v.filter(Boolean) : 
+            (v ? String(v).split(/[;,/·]/).map(s=>s.trim()).filter(Boolean) : []); // 💡 toArr 유틸리티
+        const asText = v => Array.isArray(v) ? v.join(', ') : (v || '-'); // 💡 asText 유틸리티
+        const dateId = ()=> new Date().toISOString().slice(0,10); // 💡 dateId 유틸리티
+
+
+        /* ---------- UI Functions ---------- */
         function showSection(section) {
             [crosswordListSection, crosswordStudySection].forEach(s => s.classList.add('hidden'));
             section.classList.remove('hidden');
         }
-        function showCrosswordList() { showSection(crosswordListSection); }
+        function showCrosswordList() { 
+             // 목록으로 돌아갈 때 데이터 리로드
+             if(authUser) populateWordbookList(authUser);
+             showSection(crosswordListSection); 
+        }
 
         function renderAuthUI(user) {
-  authContainer.innerHTML = '';
-  if (user) {
-    const name = user.displayName || user.email || '사용자';
-    const photo = user.photoURL || 'https://cdn-icons-png.flaticon.com/512/847/847969.png';
+            authContainer.innerHTML = '';
+            if (user) {
+                const name = user.displayName || user.email || '사용자';
+                const photo = user.photoURL || 'https://cdn-icons-png.flaticon.com/512/847/847969.png';
 
-    authContainer.innerHTML = `
-      <div class="user-menu">
-        <a href="#" class="flex items-center space-x-2">
-          <span class="font-semibold">${name}</span>
-          <img src="${photo}" class="w-7 h-7 rounded-full object-cover">
-        </a>
-        <div class="user-dropdown">
-          <a href="#">${user.email || ''}</a>
-          <a href="#" id="logoutBtn">로그아웃</a>
-        </div>
-      </div>
-    `;
+                authContainer.innerHTML = `
+                    <div class="user-menu">
+                        <a href="#" class="flex items-center space-x-2">
+                            <span class="font-semibold">${name}</span>
+                            <img src="${photo}" class="w-7 h-7 rounded-full object-cover">
+                        </a>
+                        <div class="user-dropdown">
+                            <a href="#">${user.email || ''}</a>
+                            <a href="#" id="logoutBtn" class="text-red-500 font-semibold">로그아웃</a>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    signOut(auth);
+                });
+            } else {
+                authContainer.innerHTML = `
+                    <button id="loginBtn" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold">
+                        로그인
+                    </button>`;
+                document.getElementById('loginBtn')?.addEventListener('click', () => signInWithPopup(auth, provider));
+            }
+        }
 
-    document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      signOut(auth);
-    });
-  } else {
-    authContainer.innerHTML = `
-      <button id="loginBtn" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold">
-        로그인
-      </button>`;
-    document.getElementById('loginBtn')?.addEventListener('click', () => signInWithPopup(auth, provider));
-  }
-}
-
-
-
-
+        /* ---------- Firebase Logic ---------- */
         onAuthStateChanged(auth, async (user) => {
             authUser = user;
             renderAuthUI(user);
             if (user) {
+                cleanedEmail = cleanEmailForDocId(user.email); 
                 await populateWordbookList(user);
             } else {
                 wordbookListContainer.innerHTML = `
@@ -295,24 +309,56 @@
             }
         });
 
+        // 💡 플래시카드 버전의 getWordbooksFromSnap 통합 및 cleanedEmail 적용
+        async function getWordbooksFromSnap(snapshot, type, cleanedEmail) {
+            const result = [];
+            for (const docSnap of snapshot.docs) {
+                const wordbookId = docSnap.id;
+                const searchSnap = await getDocs(collection(db, "users", cleanedEmail, type, wordbookId, "searchHistory"));
+                const words = [];
+                searchSnap.forEach(item => {
+                    const d = item.data();
+                    // 단어와 의미가 존재하고, 영어 알파벳으로 이루어진 단어만 필터링 (십자말풀이에 적합하게)
+                    if (d.word && d.word.match(/^[a-zA-Z]+$/) && toArr(d.meaning || d.meanings).length > 0) {
+                        words.push({
+                            word: String(d.word).toUpperCase(),
+                            clue: toArr(d.meaning || d.meanings)[0]
+                        });
+                    }
+                });
+                if (words.length > 0) {
+                    // allWordbooksData에 초기화/업데이트
+                    allWordbooksData[`${wordbookId}`] = allWordbooksData[`${wordbookId}`] || { progress: 0, totalCells: 0, correctCells: 0 };
+                    allWordbooksData[`${wordbookId}`].words = words;
+                    result.push({ type, id: wordbookId, words });
+                }
+            }
+            return result;
+        }
+
+
         // 📦 단어장 목록 불러오기
         async function populateWordbookList(user) {
+            if (!cleanedEmail) return;
+
             wordbookListContainer.innerHTML = `
-              <p class="text-center col-span-full text-lg text-gray-500 py-10">
-                <i class="fas fa-sync fa-spin mr-2"></i> 단어장을 불러오는 중...
-              </p>`;
+                <p class="text-center col-span-full text-lg text-gray-500 py-10">
+                    <i class="fas fa-sync fa-spin mr-2"></i> 단어장을 불러오는 중...
+                </p>`;
 
             allWordbooksData = {};
-            const datesSnap = await getDocs(collection(db, "users", user.email, "dates"));
-            const customSnap = await getDocs(collection(db, "users", user.email, "custom"));
+            // 💡 cleanedEmail 적용
+            const datesSnap = await getDocs(collection(db, "users", cleanedEmail, "dates")); 
+            const customSnap = await getDocs(collection(db, "users", cleanedEmail, "custom")); 
 
             const allWordbooks = [
-                ...(await getWordbooksFromSnap(datesSnap, "dates")),
-                ...(await getWordbooksFromSnap(customSnap, "custom")),
+                // 💡 cleanedEmail 적용
+                ...(await getWordbooksFromSnap(datesSnap, "dates", cleanedEmail)),
+                ...(await getWordbooksFromSnap(customSnap, "custom", cleanedEmail)),
             ].sort((a, b) => a.id.localeCompare(b.id));
 
             if (allWordbooks.length === 0) {
-                wordbookListContainer.innerHTML = `<p class="text-center col-span-full text-gray-500 mt-4">단어장 기록이 없습니다.</p>`;
+                wordbookListContainer.innerHTML = `<p class="text-center col-span-full text-gray-500 mt-4">십자말풀이로 만들 수 있는 단어장 기록이 없습니다.</p>`;
                 return;
             }
 
@@ -320,49 +366,58 @@
             allWordbooks.forEach(({ type, id, words }) => renderWordbookCard(type, id, words));
         }
 
-        async function getWordbooksFromSnap(snapshot, type) {
-            const result = [];
-            for (const docSnap of snapshot.docs) {
-                const wordbookId = docSnap.id;
-                const searchSnap = await getDocs(collection(db, "users", authUser.email, type, wordbookId, "searchHistory"));
-                const words = [];
-                searchSnap.forEach(item => {
-                    const d = item.data();
-                    if (d.word && d.meaning?.length > 0) {
-                        words.push({
-                            word: String(d.word).toUpperCase(),
-                            clue: Array.isArray(d.meaning) ? d.meaning[0] : d.meaning
-                        });
-                    }
-                });
-                if (words.length > 0) {
-                    allWordbooksData[`${wordbookId}`] = { words, progress: 0, totalCells: 0, correctCells: 0 };
-                    result.push({ type, id: wordbookId, words });
-                }
-            }
-            return result;
+        // ⭐ 단어장 카드 렌더링 (진행률 포함)
+        function renderWordbookCard(type, wordbookId, words) {
+            const card = document.createElement('div');
+            card.className = 'wordbook-card';
+            card.dataset.wordbookId = wordbookId;
+            card.onclick = () => loadSelectedDate(wordbookId);
+            
+            const data = allWordbooksData[wordbookId];
+            const progressPercent = data.totalCells > 0 
+                ? Math.round((data.correctCells / data.totalCells) * 100)
+                : 0;
+
+            card.innerHTML = `
+                <div class="wordbook-title">
+                    <i class="fa-solid ${type === "custom" ? "fa-user text-blue-600" : "fa-calendar-days text-blue-600"} mr-3"></i>
+                    <h3 class="text-lg font-bold text-gray-800" title="${wordbookId}">${wordbookId}</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-2">총 ${words.length}개 단어</p>
+                
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: ${progressPercent}%;"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">정답률: ${progressPercent}%</p>
+            `;
+            wordbookListContainer.appendChild(card);
         }
 
-        function renderWordbookCard(type, wordbookId, words) {
-  const card = document.createElement('div');
-  card.className = 'wordbook-card';
-  card.dataset.wordbookId = wordbookId;
-  card.onclick = () => loadSelectedDate(wordbookId);
-  
-  card.innerHTML = `
-    <div class="flex items-center mb-2">
-      <i class="fa-solid ${type === "custom" ? "fa-user text-blue-600" : "fa-calendar-days text-blue-600"} mr-3"></i>
-      <h3 class="text-lg font-bold text-gray-800">${wordbookId}</h3>
-    </div>
-    <p class="text-gray-600 text-sm">총 ${words.length}개 단어</p>
-  `;
-  wordbookListContainer.appendChild(card);
-}
+        // ⭐ 채점 후 단어장 카드 UI 업데이트
+        function updateWordbookProgress(wordbookId, correct, total) {
+            if (!allWordbooksData[wordbookId]) return;
+
+            allWordbooksData[wordbookId].correctCells = correct;
+            allWordbooksData[wordbookId].totalCells = total;
+            const progressPercent = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+            const card = document.querySelector(`.wordbook-card[data-wordbook-id="${wordbookId}"]`);
+            if (card) {
+                card.querySelector('.progress-bar').style.width = `${progressPercent}%`;
+                card.querySelector('.text-xs.text-gray-500').textContent = `정답률: ${progressPercent}%`;
+            }
+        }
 
 
-        // 🧩 퍼즐 생성
+        /* ---------- Crossword Puzzle Logic (Core) ---------- */
+
+        // 🧩 퍼즐 생성 및 화면 전환
         async function loadSelectedDate(wordbookId) {
             if (!authUser) return alert('로그인 후 사용하세요.');
+            if (!allWordbooksData[wordbookId]) {
+                alert('단어장 데이터를 찾을 수 없습니다.');
+                return;
+            }
             const list = allWordbooksData[wordbookId].words;
             currentWordbookId = wordbookId;
             if (!list || list.length === 0) return alert('선택한 단어장에 유효한 단어가 없습니다.');
@@ -370,8 +425,11 @@
             placedWords = [];
             puzzleGrid = Array.from({ length: SIZE }, () => Array.from({ length: SIZE }, () => null));
 
+            // 단어를 길이가 긴 순으로 정렬하여 교차 확률 증가
+            const sortedList = list.slice().sort((a, b) => b.word.length - a.word.length);
+
             let idx = 1;
-            for (const item of list.slice(0, MAX_WORDS)) {
+            for (const item of sortedList.slice(0, MAX_WORDS)) {
                 if (item.word.length > SIZE) continue;
                 const placed = placeWord(item, idx);
                 if (!placed) forcePlaceWord(item, idx);
@@ -391,26 +449,49 @@
             renderClues();
             showSection(crosswordStudySection);
         }
-
-        // 🧮 단어 배치 함수 (기존 유지)
+        
+        // 🧮 단어 배치 함수 (이전 로직 유지)
         function canPlace(word, row, col, dir) {
+            const dr = dir === 'down' ? 1 : 0;
+            const dc = dir === 'across' ? 1 : 0;
+
             for (let k = 0; k < word.length; k++) {
-                const r = row + (dir === 'down' ? k : 0);
-                const c = col + (dir === 'across' ? k : 0);
+                const r = row + dr * k;
+                const c = col + dc * k;
                 if (r < 0 || c < 0 || r >= SIZE || c >= SIZE) return false;
-                if (puzzleGrid[r][c] && puzzleGrid[r][c].letter && puzzleGrid[r][c].letter !== word[k]) return false;
+                const cellData = puzzleGrid[r][c];
+                if (cellData && cellData.letter && cellData.letter !== word[k]) return false;
+                
+                if (!cellData || !cellData.letter || cellData.letter !== word[k]) {
+                    if (dir === 'across') {
+                        if (r > 0 && puzzleGrid[r - 1][c] && puzzleGrid[r - 1][c].letter) return false;
+                        if (r < SIZE - 1 && puzzleGrid[r + 1][c] && puzzleGrid[r + 1][c].letter) return false;
+                        if (k === 0 && c > 0 && puzzleGrid[r][c - 1] && puzzleGrid[r][c - 1].letter) return false;
+                        if (k === word.length - 1 && c < SIZE - 1 && puzzleGrid[r][c + 1] && puzzleGrid[r][c + 1].letter) return false;
+                    } 
+                    else { // dir === 'down'
+                        if (c > 0 && puzzleGrid[r][c - 1] && puzzleGrid[r][c - 1].letter) return false;
+                        if (c < SIZE - 1 && puzzleGrid[r][c + 1] && puzzleGrid[r][c + 1].letter) return false;
+                        if (k === 0 && r > 0 && puzzleGrid[r - 1][c] && puzzleGrid[r - 1][c].letter) return false;
+                        if (k === word.length - 1 && r < SIZE - 1 && puzzleGrid[r + 1][c] && puzzleGrid[r + 1][c].letter) return false;
+                    }
+                }
             }
             return true;
         }
+
         function applyPlacement(word, row, col, dir, num) {
+            const dr = dir === 'down' ? 1 : 0;
+            const dc = dir === 'across' ? 1 : 0;
             for (let k = 0; k < word.length; k++) {
-                const r = row + (dir === 'down' ? k : 0);
-                const c = col + (dir === 'across' ? k : 0);
+                const r = row + dr * k;
+                const c = col + dc * k;
                 puzzleGrid[r][c] = puzzleGrid[r][c] || { letter: '', number: null };
                 puzzleGrid[r][c].letter = word[k];
                 if (k === 0 && puzzleGrid[r][c].number === null) puzzleGrid[r][c].number = num;
             }
         }
+
         function placeWord(item, num) {
             const word = item.word;
             if (placedWords.length === 0) {
@@ -423,6 +504,7 @@
                 }
             }
             for (const existing of placedWords) {
+                if (existing.tried) continue; 
                 for (let i = 0; i < word.length; i++) {
                     for (let j = 0; j < existing.word.length; j++) {
                         if (word[i] === existing.word[j]) {
@@ -439,6 +521,7 @@
                             if (canPlace(word, row, col, dir)) {
                                 applyPlacement(word, row, col, dir, num);
                                 placedWords.push({ ...item, row, col, dir, num });
+                                existing.tried = true; 
                                 return true;
                             }
                         }
@@ -465,7 +548,6 @@
             return false;
         }
 
-        // 🧩 그리드 생성
         function createGrid() {
             gridEl.innerHTML = '';
             for (let r = 0; r < SIZE; r++) {
@@ -496,7 +578,6 @@
             }
         }
 
-        // 🧾 문제 렌더링
         function renderClues() {
             acrossCluesEl.innerHTML = '';
             downCluesEl.innerHTML = '';
@@ -509,6 +590,7 @@
                 else acrossCluesEl.appendChild(li);
             });
         }
+        // --- (단어 배치 로직 끝) ---
 
         // 📝 채점 로직
         checkBtn.addEventListener('click', async () => {
@@ -557,25 +639,29 @@
 
         // 🧾 Firestore 채점 결과 저장
         async function logToolResult(correct, total) {
-            const user = auth.currentUser;
-            if (!user || !currentWordbookId) return;
-            const toolRef = doc(db, "users", user.email, "tool", new Date().toISOString());
-            await setDoc(toolRef, {
-                type: "crossword",
-                wordbookName: currentWordbookId,
-                finishedAt: serverTimestamp(),
-                correctCells: correct,
-                totalCells: total
-            }, { merge: true });
+            if (!cleanedEmail || !currentWordbookId) return;
+            // 💡 cleanedEmail 적용
+            const toolRef = doc(db, "users", cleanedEmail, "tool", new Date().toISOString()); 
+            
+            try {
+                await setDoc(toolRef, {
+                    type: "crossword",
+                    wordbookName: currentWordbookId,
+                    finishedAt: serverTimestamp(),
+                    correctCells: correct,
+                    totalCells: total
+                }, { merge: true });
+                console.log('✅ tool 로그 저장 완료 (십자말풀이)');
+            } catch(e) {
+                 console.error('[❌ tool 로그 저장 실패]', e);
+            }
         }
 
         refreshBtn.addEventListener('click', async () => {
             if (!authUser) return alert('로그인 후 사용하세요.');
             await populateWordbookList(authUser);
         });
-
-        // ⏳ 초기 화면 진입
-        window.onload = () => { showSection(crosswordListSection); };
+        
     </script>
 </body>
 </html>
