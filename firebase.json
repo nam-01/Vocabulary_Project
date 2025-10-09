@@ -9,7 +9,7 @@
     "redirects": [
       {
         "source": "/",
-        "destination": "/word_statistics.html",
+        "destination": "/index2.html",
         "type": 302
       }
     ]
