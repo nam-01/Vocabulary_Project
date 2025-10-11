@@ -8,11 +8,11 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;600;700&display=swap');
         body {
-            font-family: 'Gothic A1', sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: #F7F9FC;
             color: #333;
         }
-        .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem 1rem; }
 
         /* ------------------ 십자말풀이 그리드 ------------------ */
         .grid-container {
@@ -103,40 +103,16 @@
 
 
         /* --- 단어장 카드 수정 --- */
-       .wordbook-card {
+        .wordbook-card {
       background:#fff; border-radius: 12px; padding: 1.25rem;
       box-shadow: 0 4px 6px rgba(0,0,0,0.05);
       transition: transform .2s, box-shadow .2s; cursor: pointer;
     }
-    .wordbook-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+        .wordbook-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+
         
 
-        .wordbook-title {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
-            overflow: hidden;
-        }
-        .wordbook-title h3 {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #1f2937;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .progress-bar-container {
-            background-color: #E5E7EB;
-            border-radius: 9999px;
-            height: 8px;
-            overflow: hidden;
-        }
-        .progress-bar {
-            background-color: #6366F1;
-            height: 100%;
-            transition: width 0.5s ease-in-out;
-        }
+      
         .clues h3 {
             border-bottom: 2px solid #D1D5DB;
             padding-bottom: 4px;
@@ -163,13 +139,14 @@
         </nav>
     </header>
 
-    <main class="container">
-        <section id="crossword-list-section">
-            <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">십자말풀이 게임</h1>
-            <div id="wordbook-list-container" 
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-            </div>
-        </section>
+<main class="container">
+    <!-- 단어장 선택 -->
+    <section id="select-mode" class="flex flex-col items-center w-full">
+      <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">십자말풀이</h1>
+      <div id="quiz-wordbook-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+        <div id="loading-message" class="text-center text-gray-500 mt-12">단어장 불러오는 중...</div>
+      </div>
+    </section>
 
         <section id="crossword-study-section" class="hidden">
             <div class="flex justify-between items-center max-w-2xl mx-auto mb-6">
@@ -362,49 +339,40 @@
             wordbookListContainer.innerHTML = '';
             allWordbooks.forEach(({ type, id, words }) => renderWordbookCard(type, id, words));
         }
+        
+// --- 단어장 목록 불러오기 ---
+    async function loadWordbooks(email){
+      listWrap.innerHTML='';
+      const items=[];
+      const dSnap = await getDocs(collection(db,'users',email,'dates'));
+      for(const d of dSnap.docs){
+        const sSnap=await getDocs(collection(db,'users',email,'dates',d.id,'searchHistory'));
+        items.push({kind:'dates',id:d.id,count:sSnap.size});
+      }
+      const cSnap = await getDocs(collection(db,'users',email,'custom'));
+      for(const c of cSnap.docs){
+        const sSnap=await getDocs(collection(db,'users',email,'custom',c.id,'searchHistory'));
+        items.push({kind:'custom',id:c.id,count:sSnap.size});
+      }
 
-        // ⭐ 단어장 카드 렌더링 (진행률 포함)
-        function renderWordbookCard(type, wordbookId, words) {
-            const card = document.createElement('div');
-            card.className = 'wordbook-card';
-            card.dataset.wordbookId = wordbookId;
-            card.onclick = () => loadSelectedDate(wordbookId);
-            
-            const data = allWordbooksData[wordbookId];
-            const progressPercent = data.totalCells > 0 
-                ? Math.round((data.correctCells / data.totalCells) * 100)
-                : 0;
+      loadingMsg.classList.add('hidden');
+      if(!items.length){
+        listWrap.innerHTML='<p class="text-center text-gray-500 mt-12">표시할 단어장이 없습니다.</p>';
+        return;
+      }
+      items.forEach(it=>{
+        const div=document.createElement('div');
+        div.className='wordbook-card';
+        div.innerHTML=`<div class="flex items-center mb-2">
+            <i class="fa-solid ${it.kind==='dates'?'fa-calendar-days':'fa-user'} text-blue-600 mr-3"></i>
+            <h3 class="text-lg font-bold">${it.id}</h3>
+          </div><p class="text-gray-600 text-sm">총 ${it.count}개 단어</p>`;
+        div.addEventListener('click',()=>startQuiz(email,it.kind,it.id));
+        listWrap.appendChild(div);
+      });
+    }
 
-            card.innerHTML = `
-                <div class="wordbook-title">
-                    <i class="fa-solid ${type === "custom" ? "fa-user text-blue-600" : "fa-calendar-days text-blue-600"} mr-3"></i>
-                    <h3 class="text-lg font-bold text-gray-800" title="${wordbookId}">${wordbookId}</h3>
-                </div>
-                <p class="text-gray-600 text-sm mb-2">총 ${words.length}개 단어</p>
-                
-                <div class="progress-bar-container">
-                    <div class="progress-bar" style="width: ${progressPercent}%;"></div>
-                </div>
-                <p class="text-xs text-gray-500 mt-1">정답률: ${progressPercent}%</p>
-            `;
-            wordbookListContainer.appendChild(card);
-        }
-
-        // ⭐ 채점 후 단어장 카드 UI 업데이트
-        function updateWordbookProgress(wordbookId, correct, total) {
-            if (!allWordbooksData[wordbookId]) return;
-
-            allWordbooksData[wordbookId].correctCells = correct;
-            allWordbooksData[wordbookId].totalCells = total;
-            const progressPercent = total > 0 ? Math.round((correct / total) * 100) : 0;
-
-            const card = document.querySelector(`.wordbook-card[data-wordbook-id="${wordbookId}"]`);
-            if (card) {
-                card.querySelector('.progress-bar').style.width = `${progressPercent}%`;
-                card.querySelector('.text-xs.text-gray-500').textContent = `정답률: ${progressPercent}%`;
-            }
-        }
-
+        
 
         /* ---------- Crossword Puzzle Logic (Core) ---------- */
 
