@@ -9,7 +9,7 @@
     "redirects": [
       {
         "source": "/",
-        "destination": "/index2.html",
+        "destination": "/home.html",
         "type": 302
       }
     ]
