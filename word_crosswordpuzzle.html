@@ -104,15 +104,14 @@
 
         /* --- 단어장 카드 수정 --- */
         .wordbook-card {
-      background:#fff; border-radius: 12px; padding: 1.25rem;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      transition: transform .2s, box-shadow .2s; cursor: pointer;
-    }
+        background:#fff; border-radius: 12px; padding: 1.25rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: transform .2s, box-shadow .2s; cursor: pointer;
+        }
         .wordbook-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
 
         
-
-      
+        
         .clues h3 {
             border-bottom: 2px solid #D1D5DB;
             padding-bottom: 4px;
@@ -140,7 +139,6 @@
     </header>
 
 <main class="container">
-    <!-- 단어장 선택 -->
     <section id="select-mode" class="flex flex-col items-center w-full">
       <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">십자말풀이</h1>
       <div id="quiz-wordbook-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
@@ -200,7 +198,7 @@
         const MAX_WORDS = 30;
         const crosswordListSection = document.getElementById('crossword-list-section');
         const crosswordStudySection = document.getElementById('crossword-study-section');
-        const wordbookListContainer = document.getElementById('wordbook-list-container');
+        const wordbookListContainer = document.getElementById('quiz-wordbook-list'); // 수정: ID를 quiz-wordbook-list로 사용
         const crosswordStudyTitle = document.getElementById('crossword-study-title');
         const authContainer = document.getElementById('authContainer');
         const gridEl = document.getElementById('grid');
@@ -208,6 +206,7 @@
         const downCluesEl = document.getElementById('downClues');
         const refreshBtn = document.getElementById('refreshBtn');
         const checkBtn = document.getElementById('checkBtn');
+        const loadingMsg = document.getElementById('loading-message'); // 추가: 로딩 메시지 요소
 
         /* ---------- State Variables ---------- */
         let puzzleGrid = [];
@@ -227,15 +226,32 @@
 
         /* ---------- UI Functions ---------- */
         function showSection(section) {
-            [crosswordListSection, crosswordStudySection].forEach(s => s.classList.add('hidden'));
+            document.getElementById('select-mode').classList.add('hidden'); // 추가: 목록 섹션 숨김 처리
+            crosswordStudySection.classList.add('hidden');
             section.classList.remove('hidden');
         }
         function showCrosswordList() { 
-             // 목록으로 돌아갈 때 데이터 리로드
-             if(authUser) populateWordbookList(authUser);
-             showSection(crosswordListSection); 
+            // 목록으로 돌아갈 때 데이터 리로드
+            if(authUser) populateWordbookList(authUser);
+            showSection(document.getElementById('select-mode')); // 수정: select-mode 섹션 표시
         }
-
+        
+        // 단어장 렌더링
+        function renderWordbookCard(type, id, words) {
+            const div = document.createElement('div');
+            div.className = 'wordbook-card';
+            
+            // 수정
+            div.innerHTML = `<div class="flex items-center mb-2">
+                <i class="fa-solid ${type==='dates'?'fa-calendar-days':'fa-user'} text-blue-600 mr-5"></i>
+                <h3 class="text-lg font-bold">${id}</h3>
+            </div>
+            <p class="text-gray-600 text-sm">총 ${words.length}개 단어</p>`;
+            
+            div.addEventListener('click', () => loadSelectedDate(id));
+            wordbookListContainer.appendChild(div);
+        }
+        
         function renderAuthUI(user) {
             authContainer.innerHTML = '';
             if (user) {
@@ -283,7 +299,7 @@
             }
         });
 
-        // 💡 플래시카드 버전의 getWordbooksFromSnap 통합 및 cleanedEmail 적용
+        // getWordbooksFromSnap 통합 및 cleanedEmail 적용
         async function getWordbooksFromSnap(snapshot, type, cleanedEmail) {
             const result = [];
             for (const docSnap of snapshot.docs) {
@@ -311,15 +327,13 @@
         }
 
 
-        // 📦 단어장 목록 불러오기
+        //  단어장 목록 불러오기
         async function populateWordbookList(user) {
             if (!cleanedEmail) return;
 
-            wordbookListContainer.innerHTML = `
-                <p class="text-center col-span-full text-lg text-gray-500 py-10">
-                    <i class="fas fa-sync fa-spin mr-2"></i> 단어장을 불러오는 중...
-                </p>`;
-
+            loadingMsg.classList.remove('hidden'); // 로딩 메시지 보이기
+            wordbookListContainer.innerHTML = '';
+            
             allWordbooksData = {};
             // 💡 cleanedEmail 적용
             const datesSnap = await getDocs(collection(db, "users", cleanedEmail, "dates")); 
@@ -331,47 +345,15 @@
                 ...(await getWordbooksFromSnap(customSnap, "custom", cleanedEmail)),
             ].sort((a, b) => a.id.localeCompare(b.id));
 
+            loadingMsg.classList.add('hidden'); // 로딩 메시지 숨기기
+
             if (allWordbooks.length === 0) {
                 wordbookListContainer.innerHTML = `<p class="text-center col-span-full text-gray-500 mt-4">십자말풀이로 만들 수 있는 단어장 기록이 없습니다.</p>`;
                 return;
             }
 
-            wordbookListContainer.innerHTML = '';
             allWordbooks.forEach(({ type, id, words }) => renderWordbookCard(type, id, words));
         }
-        
-// --- 단어장 목록 불러오기 ---
-    async function loadWordbooks(email){
-      listWrap.innerHTML='';
-      const items=[];
-      const dSnap = await getDocs(collection(db,'users',email,'dates'));
-      for(const d of dSnap.docs){
-        const sSnap=await getDocs(collection(db,'users',email,'dates',d.id,'searchHistory'));
-        items.push({kind:'dates',id:d.id,count:sSnap.size});
-      }
-      const cSnap = await getDocs(collection(db,'users',email,'custom'));
-      for(const c of cSnap.docs){
-        const sSnap=await getDocs(collection(db,'users',email,'custom',c.id,'searchHistory'));
-        items.push({kind:'custom',id:c.id,count:sSnap.size});
-      }
-
-      loadingMsg.classList.add('hidden');
-      if(!items.length){
-        listWrap.innerHTML='<p class="text-center text-gray-500 mt-12">표시할 단어장이 없습니다.</p>';
-        return;
-      }
-      items.forEach(it=>{
-        const div=document.createElement('div');
-        div.className='wordbook-card';
-        div.innerHTML=`<div class="flex items-center mb-2">
-            <i class="fa-solid ${it.kind==='dates'?'fa-calendar-days':'fa-user'} text-blue-600 mr-3"></i>
-            <h3 class="text-lg font-bold">${it.id}</h3>
-          </div><p class="text-gray-600 text-sm">총 ${it.count}개 단어</p>`;
-        div.addEventListener('click',()=>startQuiz(email,it.kind,it.id));
-        listWrap.appendChild(div);
-      });
-    }
-
         
 
         /* ---------- Crossword Puzzle Logic (Core) ---------- */
@@ -594,11 +576,12 @@
             await logToolResult(correctCells, totalCells);
 
             if (currentWordbookId) {
-                updateWordbookProgress(
-                    currentWordbookId,
-                    correctCells,
-                    allWordbooksData[currentWordbookId].totalCells || totalCells
-                );
+                // 이 부분은 단어장 진도 업데이트 로직이 필요한 경우에 사용
+                // updateWordbookProgress(
+                //     currentWordbookId,
+                //     correctCells,
+                //     allWordbooksData[currentWordbookId].totalCells || totalCells
+                // );
             }
         });
 
@@ -618,7 +601,7 @@
                 }, { merge: true });
                 console.log('✅ tool 로그 저장 완료 (십자말풀이)');
             } catch(e) {
-                 console.error('[❌ tool 로그 저장 실패]', e);
+                console.error('[❌ tool 로그 저장 실패]', e);
             }
         }
 
